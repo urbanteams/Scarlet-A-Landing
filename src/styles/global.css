@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+/* ============================================================
+   DESIGN TOKENS — Scarlet A Games (Dark Cinematic)
+   ============================================================ */
+@theme {
+  /* Core palette */
+  --color-bg:          #050505;
+  --color-card:        #111111;
+  --color-accent:      #DC2626;
+  --color-accent-glow: rgba(220, 38, 38, 0.35);
+
+  /* Typography */
+  --font-sans:    'Inter', sans-serif;
+  --font-serif:   'Playfair Display', serif;
+  --font-cursive: 'Allura', cursive;
+}
+
+/* ============================================================
+   BASE — resets, keyframes, body defaults
+   ============================================================ */
+
+@layer base {
+  /* ── Keyframes ── */
+  @keyframes float-orb-left {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50%      { transform: translateY(-28px) scale(1.04); }
+  }
+  @keyframes float-orb-right {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50%      { transform: translateY(24px) scale(0.97); }
+  }
+  @keyframes pulse-ring {
+    0%, 100% { opacity: 0.15; transform: scale(1); }
+    50%      { opacity: 0.35; transform: scale(1.06); }
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-bg);
+    color: white;
+    margin: 0;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+}
+
+/* ============================================================
+   COMPONENT CLASSES
+   ============================================================ */
+
+@layer components {
+  /* ── Reveal on Scroll ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── Decorative Floating Orbs ── */
+  .orb-left  { animation: float-orb-left  14s ease-in-out infinite; }
+  .orb-right { animation: float-orb-right 18s ease-in-out infinite; }
+  .pulse-ring { animation: pulse-ring 6s ease-in-out infinite; }
+
+  /* ── Noise Overlay ── */
+  .noise-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0.045;
+    mix-blend-mode: overlay;
+    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  }
+
+  /* ── Parallax Cards ── */
+  .parallax-card-up   { transform: translateY(var(--scroll-offset-up,   0px)); }
+  .parallax-card-down { transform: translateY(var(--scroll-offset-down,  0px)); }
+
+  /* ── Accent Glow Button ── */
+  .glow-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--color-accent-glow);
+    filter: blur(20px);
+    border-radius: 9999px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .glow-btn:hover::before { opacity: 1; }
+}
