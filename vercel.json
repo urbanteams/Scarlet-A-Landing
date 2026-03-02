@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/triangle/:path*",
+      "destination": "https://triangle-teal.vercel.app/:path*"
+    }
+  ]
+}

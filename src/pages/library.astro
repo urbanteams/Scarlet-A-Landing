@@ -1,0 +1,139 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Game Library — Scarlet A Games" description="Browse the Scarlet A Games library. Bold games for bold players.">
+  <div class="min-h-screen bg-[#050505] selection:bg-[#DC2626] selection:text-white">
+
+    <!-- Global Noise Overlay -->
+    <div class="noise-overlay"></div>
+
+    <!-- ─────────────── Logo ─────────────── -->
+    <div class="container mx-auto px-6 pt-10">
+      <a href="/" class="text-4xl font-cursive hover:opacity-80 transition-opacity duration-300" style="letter-spacing: 0.01em;">
+        Scarlet <span style="color: var(--color-accent);">A</span> Games
+      </a>
+    </div>
+
+    <!-- ─────────────── Library Header ─────────────── -->
+    <section class="pt-16 pb-20 relative">
+      <div class="container mx-auto px-6 text-center">
+        <div class="reveal">
+          <h1 class="font-cursive mb-4" style="font-size: clamp(3rem, 6vw, 5rem); color: #ffe0e0; text-shadow: 0 0 14px rgba(255,255,255,0.65);">
+            Game Library
+          </h1>
+        </div>
+        <div class="reveal" style="transition-delay: 150ms;">
+          <p class="text-lg text-gray-400 max-w-lg mx-auto font-light tracking-wide">
+            Browse our collection
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────── Game Gallery ─────────────── -->
+    <section class="pb-40 relative">
+      <div class="container mx-auto px-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+
+          <!-- Game 1 — Scarlet Triangle -->
+          <div class="reveal">
+            <a href="https://scarletagames.com/triangle" class="block group bg-[#111] border border-white/10 rounded-2xl overflow-hidden transition-all duration-500 hover:border-[rgba(220,38,38,0.4)] hover:shadow-[0_10px_40px_rgba(220,38,38,0.12)] no-underline">
+              <div class="aspect-[16/10] bg-[#1a1a1a] overflow-hidden">
+                <img src="/scarlettriangle.jpg" alt="Scarlet Triangle" class="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500" />
+              </div>
+              <div class="p-6">
+                <h3 class="font-cursive text-3xl text-white/90 mb-2">Scarlet Tri<span class="accent-reveal">a</span>ngle</h3>
+                <p class="text-gray-400 text-sm leading-relaxed font-light">
+                  Take turns placing tiles until the Scarlet Triangle fills the last space. Think ahead of your opponent so that you have higher numbers next to it.
+                </p>
+              </div>
+            </a>
+          </div>
+
+          <!-- Game 2 — Target Number -->
+          <div class="reveal" style="transition-delay: 100ms;">
+            <div class="group bg-[#111] border border-white/10 rounded-2xl overflow-hidden transition-all duration-500 hover:border-[rgba(220,38,38,0.4)] hover:shadow-[0_10px_40px_rgba(220,38,38,0.12)]">
+              <div class="aspect-[16/10] bg-[#1a1a1a] overflow-hidden">
+                <img src="/targetnumber.jpg" alt="Target Number" class="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500" />
+              </div>
+              <div class="p-6">
+                <h3 class="font-cursive text-3xl text-white/90 mb-2">T<span class="accent-reveal">a</span>rget Number</h3>
+                <p class="text-gray-400 text-sm leading-relaxed font-light">
+                  Memory, math, and a sadistically short timer. No pressure. <br><br>Coming soon to iOS. 
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game 3 — Time Auction -->
+          <div class="reveal" style="transition-delay: 200ms;">
+            <div class="group bg-[#111] border border-white/10 rounded-2xl overflow-hidden transition-all duration-500 hover:border-[rgba(220,38,38,0.4)] hover:shadow-[0_10px_40px_rgba(220,38,38,0.12)]">
+              <div class="aspect-[16/10] bg-[#1a1a1a] overflow-hidden">
+                <img src="/timeauction.jpg" alt="Time Auction" class="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500" />
+              </div>
+              <div class="p-6">
+                <h3 class="font-cursive text-3xl text-white/90 mb-2">Time <span class="accent-reveal">A</span>uction</h3>
+                <p class="text-gray-400 text-sm leading-relaxed font-light">
+                  Every second is currency in this tense bidding game. <br><br>Coming soon to iOS.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Game 4 — Payola -->
+          <div class="reveal" style="transition-delay: 300ms;">
+            <div class="group bg-[#111] border border-white/10 rounded-2xl overflow-hidden transition-all duration-500 hover:border-[rgba(220,38,38,0.4)] hover:shadow-[0_10px_40px_rgba(220,38,38,0.12)]">
+              <div class="aspect-[16/10] bg-[#1a1a1a] overflow-hidden">
+                <img src="/payola3.jpg" alt="Payola" class="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500" />
+              </div>
+              <div class="p-6">
+                <h3 class="font-cursive text-3xl text-white/90 mb-2">Payol<span class="accent-reveal">a</span></h3>
+                <p class="text-gray-400 text-sm leading-relaxed font-light">
+                  Bribe radio stations to expand your studio's influence across the country. A cooperative bidding game with shifting alliances disguised as an area control game. Coming soon.
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────── Footer ─────────────── -->
+    <footer class="py-20 bg-[#050505] relative overflow-hidden" style="border-top: 1px solid rgba(255,255,255,0.05);">
+      <div class="container mx-auto px-6 relative z-10">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-12">
+          <div class="w-full md:w-auto">
+            <h2 class="leading-[0.85] text-white/10 select-none pointer-events-none font-cursive"
+                style="font-size: 12vw;">
+              Scarlet A Games
+            </h2>
+          </div>
+
+          <div class="flex flex-col gap-8 text-right">
+            <div class="flex flex-col gap-4 text-gray-400">
+              <a href="https://discord.gg/Pd7HVKQd8T" class="hover:text-white transition-colors duration-300">Discord</a>
+              <a href="https://instagram.com/scarletagames" class="hover:text-white transition-colors duration-300">Instagram</a>
+              <a href="https://x.com/scarletagames" class="hover:text-white transition-colors duration-300">Twitter / X</a>
+              <a href="https://www.tiktok.com/@scarletagames" class="hover:text-white transition-colors duration-300">TikTok</a>
+            </div>
+            <p class="text-sm text-gray-600">&copy; 2026 Scarlet A Games. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // Reveal on scroll
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('active');
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+  </script>
+</Layout>

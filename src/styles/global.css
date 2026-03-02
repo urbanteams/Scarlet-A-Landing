@@ -96,6 +96,15 @@
   .parallax-card-up   { transform: translateY(var(--scroll-offset-up,   0px)); }
   .parallax-card-down { transform: translateY(var(--scroll-offset-down,  0px)); }
 
+  /* ── Accent Letter Reveal ── */
+  .accent-reveal {
+    color: inherit;
+    transition: color 0.5s ease;
+  }
+  .group:hover .accent-reveal {
+    color: var(--color-accent);
+  }
+
   /* ── Accent Glow Button ── */
   .glow-btn::before {
     content: '';
