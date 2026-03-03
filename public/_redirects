@@ -1,2 +1,0 @@
-/triangle https://triangle-teal.vercel.app/triangle 200
-/triangle/* https://triangle-teal.vercel.app/triangle/:splat 200
