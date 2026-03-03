@@ -1,12 +1,13 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/triangle",
-      "destination": "https://triangle-teal.vercel.app/"
+      "src": "/triangle$",
+      "dest": "https://triangle-teal.vercel.app/triangle"
     },
     {
-      "source": "/triangle/:path*",
-      "destination": "https://triangle-teal.vercel.app/:path*"
-    }
+      "src": "/triangle/(.*)",
+      "dest": "https://triangle-teal.vercel.app/triangle/$1"
+    },
+    { "handle": "filesystem" }
   ]
 }
