@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/triangle",
+      "destination": "https://triangle-teal.vercel.app/"
+    },
+    {
       "source": "/triangle/:path*",
       "destination": "https://triangle-teal.vercel.app/:path*"
     }
