@@ -15,15 +15,39 @@ npm run preview  # Serve the production build locally
 - **Astro 5** (static output, no SSR) + **Tailwind CSS v4**
 - Tailwind v4 is configured via `@tailwindcss/vite` in `astro.config.mjs` — there is **no `tailwind.config.js`**. All configuration lives in `src/styles/global.css`.
 - **Iconify** loaded via CDN for icons (lucide icon set)
+- **Hosted on Cloudflare Pages** (via Wrangler). Wrangler auto-installs `@astrojs/cloudflare` adapter during deploy.
 
 ## Architecture
 
 ```
 src/
-├── styles/global.css       # Design tokens (@theme), keyframes, component classes (.reveal, .orb-*, .glow-btn, etc.)
-├── layouts/Layout.astro    # HTML shell: Google Fonts (Inter, Playfair Display, Allura), Iconify CDN, global.css import
-└── pages/index.astro       # Single-page site — all sections inline (Nav, Hero, Mission, Experiences, Footer) + client-side JS
+├── middleware.ts            # Astro middleware — proxies external game routes (e.g. /triangle → triangle-teal.vercel.app)
+├── styles/global.css        # Design tokens (@theme), keyframes, component classes (.reveal, .orb-*, .glow-btn, etc.)
+├── layouts/Layout.astro     # HTML shell: Google Fonts (Inter, Playfair Display, Allura), Iconify CDN, global.css import
+├── pages/index.astro        # Landing page — all sections inline (Nav, Hero, Mission, Experiences, Footer) + client-side JS
+└── pages/library.astro      # Game library page — catalog of all games
 ```
+
+## External Game Routing
+
+Games hosted on separate platforms (e.g. Vercel) are proxied through `src/middleware.ts` so they appear under `scarletagames.com/<game>`. The middleware intercepts matching paths and fetches from the external origin, keeping the URL in the browser.
+
+**To add a new external game route**, add a condition in `src/middleware.ts`:
+```ts
+if (url.pathname === '/newgame' || url.pathname.startsWith('/newgame/')) {
+  const targetUrl = `https://newgame-app.vercel.app${url.pathname}${url.search}`;
+  const response = await fetch(targetUrl);
+  return new Response(response.body, { status: response.status, headers: response.headers });
+}
+```
+
+**Important**: The external app must be configured with a matching base path (e.g. `/triangle`) so its assets resolve correctly when served under the proxy.
+
+| Route | Origin | Notes |
+|---|---|---|
+| `/triangle` | `triangle-teal.vercel.app` | Scarlet Triangle game (Vercel) |
+
+**Why not `_redirects`?** Cloudflare Workers doesn't support proxy (200) redirects to external URLs in `_redirects`. Astro middleware running in the Worker handles this instead.
 
 ## Design System — Dark Cinematic
 
