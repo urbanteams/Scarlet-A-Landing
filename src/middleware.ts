@@ -38,5 +38,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
     });
   }
 
+  if (url.pathname === '/666' || url.pathname.startsWith('/666/')) {
+    const targetUrl = `https://666-one-theta.vercel.app${url.pathname}${url.search}`;
+    const response = await fetch(targetUrl);
+    return new Response(response.body, {
+      status: response.status,
+      headers: response.headers,
+    });
+  }
+
   return next();
 });
