@@ -30,24 +30,7 @@ src/
 
 ## External Game Routing
 
-Games hosted on separate platforms (e.g. Vercel) are proxied through `src/middleware.ts` so they appear under `scarletagames.com/<game>`. The middleware intercepts matching paths and fetches from the external origin, keeping the URL in the browser.
-
-**To add a new external game route**, add a condition in `src/middleware.ts`:
-```ts
-if (url.pathname === '/newgame' || url.pathname.startsWith('/newgame/')) {
-  const targetUrl = `https://newgame-app.vercel.app${url.pathname}${url.search}`;
-  const response = await fetch(targetUrl);
-  return new Response(response.body, { status: response.status, headers: response.headers });
-}
-```
-
-**Important**: The external app must be configured with a matching base path (e.g. `/triangle`) so its assets resolve correctly when served under the proxy.
-
-| Route | Origin | Notes |
-|---|---|---|
-| `/triangle` | `triangle-teal.vercel.app` | Scarlet Triangle game (Vercel) |
-
-**Why not `_redirects`?** Cloudflare Workers doesn't support proxy (200) redirects to external URLs in `_redirects`. Astro middleware running in the Worker handles this instead.
+Games hosted on Vercel are proxied through `src/middleware.ts` so they appear under `scarletagames.com/<game>`. See **[vercel.md](vercel.md)** for the full setup checklist (covers both this repo and the game's Vercel repo).
 
 ## Design System — Dark Cinematic
 
