@@ -79,5 +79,24 @@ export const onRequest = defineMiddleware(async (context, next) => {
     });
   }
 
+  if (url.pathname === '/target' || url.pathname.startsWith('/target/')) {
+    const targetUrl = `https://target-number.vercel.app${url.pathname}${url.search}`;
+    const response = await fetch(targetUrl);
+
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('text/html')) {
+      const html = await response.text();
+      return new Response(html, {
+        status: response.status,
+        headers: response.headers,
+      });
+    }
+
+    return new Response(response.body, {
+      status: response.status,
+      headers: response.headers,
+    });
+  }
+
   return next();
 });
