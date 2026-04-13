@@ -58,6 +58,12 @@ Commit, push, and Vercel will auto-deploy.
 |---|---|---|
 | `/triangle` | `triangle-teal.vercel.app` | Scarlet Triangle game |
 | `/666` | `666-one-theta.vercel.app` | 666 dice game |
+| `/target` | `target-number.vercel.app` | Target Number game |
+| `/gazump` | `gazump.fly.dev` | Gazump bidding game (Fly.io, Python) |
+
+## Static asset naming caveat
+
+Avoid naming images in `public/` with a prefix that matches a proxy route. The middleware checks `url.pathname.startsWith('/<game>/')` (with trailing slash), so a file like `/targetfinal.jpg` is fine — but a file at `/target/something.jpg` would be intercepted and proxied to Vercel instead of served as a static asset.
 
 ## Why not `_redirects`?
 
