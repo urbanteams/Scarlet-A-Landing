@@ -80,12 +80,25 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   if (url.pathname === '/gazump' || url.pathname.startsWith('/gazump/')) {
+    // Serve gazump.png as the favicon directly
+    if (url.pathname === '/gazump/favicon.png' || url.pathname === '/gazump/favicon.ico') {
+      const faviconResponse = await fetch(new URL('/gazump.png', context.request.url));
+      return new Response(faviconResponse.body, {
+        status: 200,
+        headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' },
+      });
+    }
+
     const targetUrl = `https://gazump.fly.dev${url.pathname}${url.search}`;
     const response = await fetch(targetUrl);
 
     const contentType = response.headers.get('content-type') || '';
     if (contentType.includes('text/html')) {
-      const html = await response.text();
+      let html = await response.text();
+      // Inject favicon and override title
+      const faviconLink = '<link rel="icon" type="image/png" href="/gazump/favicon.png">';
+      html = html.replace('<head>', `<head>\n${faviconLink}`);
+      html = html.replace(/<title>[^<]*<\/title>/, '<title>GAZUMP!</title>');
       return new Response(html, {
         status: response.status,
         headers: response.headers,
