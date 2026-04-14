@@ -89,7 +89,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
       });
     }
 
-    const targetUrl = `https://gazump.vercel.app${url.pathname}${url.search}`;
+    const strippedPath = url.pathname.replace(/^\/gazump\/?/, '/');
+    const targetUrl = `https://gazump.vercel.app${strippedPath}${url.search}`;
     const response = await fetch(targetUrl);
 
     const contentType = response.headers.get('content-type') || '';
