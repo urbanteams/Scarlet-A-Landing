@@ -89,7 +89,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       });
     }
 
-    const targetUrl = `https://gazump.fly.dev${url.pathname}${url.search}`;
+    const targetUrl = `https://gazump.vercel.app${url.pathname}${url.search}`;
     const response = await fetch(targetUrl);
 
     const contentType = response.headers.get('content-type') || '';
