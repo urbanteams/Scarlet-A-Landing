@@ -100,6 +100,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
       const faviconLink = '<link rel="icon" type="image/png" href="/gazump/favicon.png">';
       html = html.replace('<head>', `<head>\n${faviconLink}`);
       html = html.replace(/<title>[^<]*<\/title>/, '<title>GAZUMP!</title>');
+      // Rewrite absolute API paths so they route through the /gazump proxy
+      html = html.replaceAll("fetch('/api/", "fetch('/gazump/api/");
       return new Response(html, {
         status: response.status,
         headers: response.headers,
