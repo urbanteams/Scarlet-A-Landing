@@ -19,6 +19,8 @@ import Layout from '../layouts/Layout.astro';
         <div class="hidden md:flex items-center space-x-8 absolute left-1/2 -translate-x-1/2">
           <a href="#games" class="text-sm text-gray-400 hover:text-white transition-colors duration-300">Games</a>
           <a href="#experiences" class="text-sm text-gray-400 hover:text-white transition-colors duration-300">Experiences</a>
+          <a href="#about" class="text-sm text-gray-400 hover:text-white transition-colors duration-300">About Us</a>
+          <a href="#blog" class="text-sm text-gray-400 hover:text-white transition-colors duration-300">Blog</a>
         </div>
 
         <div class="flex items-center gap-5">
@@ -104,7 +106,7 @@ import Layout from '../layouts/Layout.astro';
           </p>
         </div>
         <!-- Game Mini Cards -->
-        <div class="mt-32 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+        <div class="mt-32 grid grid-cols-1 md:grid-cols-2 gap-5 max-w-[860px] mx-auto">
 
           <!-- Scarlet Triangle -->
           <div class="reveal">
@@ -112,7 +114,7 @@ import Layout from '../layouts/Layout.astro';
               <div class="aspect-[16/10] bg-[#1a1a1a] overflow-hidden">
                 <img src="/scarlettriangle.jpg" alt="Scarlet Triangle" class="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500" />
               </div>
-              <div class="p-6">
+              <div class="p-5">
                 <h3 class="font-cursive text-3xl text-white/90">Scarlet Tri<span class="accent-reveal">a</span>ngle</h3>
               </div>
             </a>
@@ -124,7 +126,7 @@ import Layout from '../layouts/Layout.astro';
               <div class="aspect-[16/10] bg-[#1a1a1a] overflow-hidden">
                 <img src="/666plus.jpg" alt="666: A Devious Dice Game" class="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500" />
               </div>
-              <div class="p-6">
+              <div class="p-5">
                 <h3 class="font-cursive text-3xl text-white/90">666: <span class="accent-reveal">A</span> Devious Dice Game</h3>
               </div>
             </a>
@@ -136,7 +138,7 @@ import Layout from '../layouts/Layout.astro';
               <div class="aspect-[16/10] bg-[#1a1a1a] overflow-hidden">
                 <img src="/targetfinal.jpg" alt="Target Number" class="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500" />
               </div>
-              <div class="p-6">
+              <div class="p-5">
                 <h3 class="font-cursive text-3xl text-white/90">T<span class="accent-reveal">a</span>rget Number</h3>
               </div>
             </a>
@@ -148,7 +150,7 @@ import Layout from '../layouts/Layout.astro';
               <div class="aspect-[16/10] bg-[#1a1a1a] overflow-hidden">
                 <img src="/gazump.jpg" alt="Gazump" class="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500" />
               </div>
-              <div class="p-6">
+              <div class="p-5">
                 <h3 class="font-cursive text-3xl text-white/90">G<span class="accent-reveal">a</span>zump</h3>
               </div>
             </a>
@@ -158,65 +160,58 @@ import Layout from '../layouts/Layout.astro';
       </div>
     </section>
 
-    <!-- ─────────────── Catalog / Cards Section ─────────────── -->
+    <!-- ─────────────── Experiences Section ─────────────── -->
     <section id="experiences" class="py-40 relative overflow-hidden">
       <div class="container mx-auto px-6 relative z-10">
-        <div class="reveal mb-32">
+        <div class="reveal mb-24">
           <h2 class="text-5xl md:text-7xl text-center font-serif">
             Experiences that<br />
             <span class="font-cursive" style="font-size: 0.82em; line-height: 1.2;">make their mark.</span>
           </h2>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-
-          <!-- Card 1 — Live Events -->
-          <div class="parallax-card-down">
-            <div class="reveal rounded-3xl p-8 md:p-12 aspect-[4/5] flex flex-col justify-between shadow-2xl transition-all duration-500 group cursor-pointer"
-                 style="background-color: var(--color-accent); box-shadow: 0 20px 50px rgba(220,38,38,0.15);"
-                 data-card="scarlet">
-              <div class="flex justify-between items-start">
-                <div class="w-12 h-12 rounded-full bg-black/10 flex items-center justify-center group-hover:rotate-45 transition-transform duration-500">
-                  <iconify-icon icon="lucide:star" class="text-black text-2xl"></iconify-icon>
-                </div>
-                <span class="text-black font-medium text-sm border border-black/20 px-3 py-1 rounded-full">01</span>
+        <div class="max-w-3xl mx-auto">
+          <div class="reveal rounded-3xl p-8 md:p-14 shadow-2xl transition-all duration-500 group"
+               style="background-color: var(--color-accent-deep); box-shadow: 0 20px 50px rgba(153,27,27,0.22);"
+               data-card="scarlet">
+            <div class="flex justify-between items-start mb-14">
+              <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center group-hover:rotate-45 transition-transform duration-500">
+                <iconify-icon icon="lucide:star" class="text-white text-2xl"></iconify-icon>
               </div>
-
-              <div>
-                <h3 class="text-6xl md:text-7xl text-black mb-4 leading-none tracking-tight font-serif">
-                  Live<br />Events
-                </h3>
-                <p class="text-black/70 text-lg leading-snug">
-                  You've never played a game of Mafia or Werewolf like this. Coming to Vancouver, BC this summer.
-                </p>
-              </div>
-
-              <div class="w-full h-px bg-black/10 mt-8"></div>
+              <span class="text-white/80 font-medium text-sm border border-white/25 px-3 py-1 rounded-full">01</span>
             </div>
-          </div>
 
-          <!-- Card 2 — Online Reality Games -->
-          <div class="parallax-card-up md:mt-24">
-            <div class="reveal bg-[#111] border border-white/10 rounded-3xl p-8 md:p-12 aspect-[4/5] flex flex-col justify-between shadow-2xl group cursor-pointer transition-all duration-500"
-                 style="transition-delay: 150ms;"
-                 data-card="dark">
-              <div class="flex justify-between items-start">
-                <div class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                  <iconify-icon icon="lucide:arrow-right" class="text-white text-2xl -rotate-45"></iconify-icon>
-                </div>
-                <span class="text-white/50 font-medium text-sm border border-white/10 px-3 py-1 rounded-full">02</span>
-              </div>
+            <h3 class="text-5xl md:text-7xl text-white mb-6 leading-none tracking-tight font-serif">
+              SUSpects Live
+            </h3>
+            <p class="text-white/75 text-lg md:text-xl leading-snug max-w-xl">
+              You've never played a game of Mafia or Werewolf like this. A live social deduction experience coming soon to Vancouver, BC. Join the interest list below.
+            </p>
 
-              <div>
-                <h3 class="text-6xl md:text-7xl text-white mb-4 leading-none tracking-tight font-serif">
-                  Online Reality<br />Games
-                </h3>
-                <p class="text-gray-400 text-lg leading-snug">
-                  Backstab and betray on a dramatic reality show, all from the comfort of your own home. Reality Labs Season 5 is coming soon.
-                </p>
-              </div>
+            <div class="w-full h-px bg-white/15 my-10"></div>
 
-              <div class="w-full h-px bg-white/10 mt-8"></div>
+            <!-- Interest list sign-up -->
+            <div class="max-w-md mx-auto text-center">
+              <form id="interest-form" class="flex flex-col sm:flex-row items-center gap-3" novalidate>
+                <label for="interest-email" class="sr-only">Email address</label>
+                <input
+                  id="interest-email"
+                  name="email"
+                  type="email"
+                  required
+                  autocomplete="email"
+                  placeholder="you@example.com"
+                  class="on-accent-focus w-full flex-1 rounded-full bg-black/20 border border-white/25 px-5 py-3 text-white placeholder:text-white/50 hover:border-white/40 focus:border-white/70 focus:outline-none transition-colors duration-300"
+                />
+                <button
+                  type="submit"
+                  id="interest-submit"
+                  class="on-accent-focus w-full sm:w-auto shrink-0 rounded-full bg-white px-7 py-3 text-sm font-medium uppercase tracking-widest text-black transition-all duration-300 hover:scale-105 hover:bg-gray-100 disabled:opacity-50 disabled:hover:scale-100"
+                >
+                  Join
+                </button>
+              </form>
+              <p id="interest-status" class="mt-4 text-sm text-white/80 min-h-[1.25rem]" role="status" aria-live="polite"></p>
             </div>
           </div>
         </div>
@@ -225,6 +220,134 @@ import Layout from '../layouts/Layout.astro';
       <!-- Background dot grid -->
       <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] opacity-10 pointer-events-none"
            style="background-image: radial-gradient(circle, #333 1px, transparent 1px); background-size: 40px 40px;"></div>
+    </section>
+
+    <!-- ─────────────── About Us ─────────────── -->
+    <section id="about" class="py-32 relative">
+      <div class="container mx-auto px-6">
+        <div class="reveal mb-20">
+          <h2 class="font-cursive text-center text-white/90" style="font-size: clamp(3.5rem, 8vw, 6rem); line-height: 1.2;">
+            About Us
+          </h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-[minmax(0,380px)_minmax(0,1fr)] gap-10 md:gap-14 items-start max-w-5xl mx-auto">
+
+          <!-- Portrait — drop a photo at public/about.jpg to replace the placeholder -->
+          <div class="reveal">
+            <div class="relative aspect-[4/5] rounded-2xl overflow-hidden bg-[#111] border border-white/10 group">
+              <div id="about-photo-fallback" class="absolute inset-0 flex items-center justify-center"
+                   style="background: radial-gradient(circle at 35% 30%, rgba(220,38,38,0.25) 0%, transparent 65%);">
+                <iconify-icon icon="lucide:user-round" class="text-white/20" width="72" height="72"></iconify-icon>
+              </div>
+              <img
+                src="/about.jpg"
+                alt="Devon Sampson after winning the Wynn Summer Classic"
+                class="relative z-10 w-full h-full object-cover"
+                onerror="this.remove();"
+              />
+            </div>
+          </div>
+
+          <!-- Bio — placeholder copy, edit freely -->
+          <div class="reveal" style="transition-delay: 150ms;">
+            <h3 class="font-cursive text-4xl md:text-5xl text-white/90 mb-2">
+              Devon S<span style="color: var(--color-accent);">a</span>mpson
+            </h3>
+            <p class="text-sm uppercase tracking-widest text-gray-600 mb-6">Founder &amp; Lead Game Designer</p>
+            <div class="space-y-4 text-gray-400 text-[15px] leading-relaxed font-light">
+              <p>
+                Devon Sampson is the founder of Scarlet A Games. A professional poker player from Vancouver, BC, Devon specializes in online Pot Limit Omaha cash games but also has several notable tournament results, including a World Championship of Online Poker title in 2023, a Wynn Summer Classic title in 2026, and an appearance at the live-streamed final table of the <a href="https://youtu.be/6dECb3Co6zA" target="_blank" rel="noopener noreferrer" class="italic text-white/80 underline decoration-white/25 underline-offset-4 hover:text-[#DC2626] hover:decoration-[#DC2626] transition-colors duration-300">PokerGO NFT Invitational</a>.
+              </p>
+              <p>
+                He has a passion for game design that stems from his interest in reality competition shows and tabletop gaming. He has independently hosted several long-form competition experiences, with alumni of these games including Danny Butler from Season 36 of CBS's <em>The Amazing Race</em> and Daniel Kilby from CBS's <em>Survivor 51</em>.
+              </p>
+              <p>
+                Devon has a Bachelor's Degree in Philosophy from Simon Fraser University and received his Juris Doctor from Queen's University in 2019.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────── Blog ─────────────── -->
+    <section id="blog" class="py-32 relative">
+      <div class="container mx-auto px-6">
+        <div class="reveal mb-12">
+          <h2 class="text-5xl md:text-7xl text-center font-serif">
+            Notes from<br />
+            <span class="font-cursive" style="font-size: 0.82em; line-height: 1.2;">the table.</span>
+          </h2>
+        </div>
+
+        <!-- Prominent link to the full blog -->
+        <div class="reveal mb-20" style="transition-delay: 100ms;">
+          <a
+            href="https://scarletagames.com/blog"
+            class="group block max-w-2xl mx-auto no-underline rounded-2xl border border-white/10 bg-[#111] px-8 py-10 text-center transition-all duration-500 hover:border-[rgba(220,38,38,0.4)] hover:shadow-[0_10px_40px_rgba(220,38,38,0.12)]"
+          >
+            <p class="text-xl md:text-2xl font-light leading-snug text-gray-400">
+              Follow <span class="font-cursive text-white/90" style="font-size: 1.9em; line-height: 1; letter-spacing: 0.01em;">Scarlet Str<span style="color: var(--color-accent);">a</span>tegy</span>, our blog about the art of strategy
+            </p>
+            <span class="mt-6 inline-flex items-center gap-2 text-sm uppercase tracking-widest text-white/70 group-hover:text-[#DC2626] transition-colors duration-300">
+              Read the blog
+              <iconify-icon icon="lucide:arrow-right" width="16" height="16"></iconify-icon>
+            </span>
+          </a>
+        </div>
+
+        <!-- Article thumbnails — placeholders -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+
+          <article class="reveal">
+            <a href="https://scarletagames.com/blog/fixing-the-anonymous" class="flex flex-col h-full group bg-[#111] border border-white/10 rounded-xl overflow-hidden transition-all duration-500 hover:border-[rgba(220,38,38,0.4)] hover:shadow-[0_8px_30px_rgba(220,38,38,0.12)] no-underline">
+              <div class="relative aspect-[16/10] bg-[#1a1a1a] overflow-hidden">
+                <img src="/blog/the-anonymous-poster.jpg" alt="Fixing The Anonymous" class="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500" />
+              </div>
+              <div class="p-6 flex flex-col flex-1">
+                <p class="text-xs uppercase tracking-widest text-gray-600 mb-3">Game Design</p>
+                <h3 class="font-serif text-xl text-white/90 mb-2 group-hover:text-white transition-colors duration-300">Fixing The Anonymous</h3>
+                <p class="text-gray-400 text-sm leading-relaxed font-light">
+                  USA Network's <em>The Anonymous</em> was an innovative new reality competition format. I improved upon it.
+                </p>
+              </div>
+            </a>
+          </article>
+
+          <article class="reveal" style="transition-delay: 100ms;">
+            <a href="https://scarletagames.com/blog/hosting-the-devils-plan" class="flex flex-col h-full group bg-[#111] border border-white/10 rounded-xl overflow-hidden transition-all duration-500 hover:border-[rgba(220,38,38,0.4)] hover:shadow-[0_8px_30px_rgba(220,38,38,0.12)] no-underline">
+              <div class="relative aspect-[16/10] bg-[#1a1a1a] overflow-hidden">
+                <img src="/blog/devils-plan-title.webp" alt="Hosting The Devil's Plan" class="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500" />
+              </div>
+              <div class="p-6 flex flex-col flex-1">
+                <p class="text-xs uppercase tracking-widest text-gray-600 mb-3">Game Design</p>
+                <h3 class="font-serif text-xl text-white/90 mb-2 group-hover:text-white transition-colors duration-300">Hosting The Devil's Plan</h3>
+                <p class="text-gray-400 text-sm leading-relaxed font-light">
+                  I ran two simultaneous seasons of Netflix's <em>The Devil's Plan</em> with a nine-person production team. Here's what it taught me.
+                </p>
+              </div>
+            </a>
+          </article>
+
+          <article class="reveal" style="transition-delay: 200ms;">
+            <a href="https://scarletagames.com/blog/hosting-the-mole" class="flex flex-col h-full group bg-[#111] border border-white/10 rounded-xl overflow-hidden transition-all duration-500 hover:border-[rgba(220,38,38,0.4)] hover:shadow-[0_8px_30px_rgba(220,38,38,0.12)] no-underline">
+              <div class="relative aspect-[16/10] bg-[#1a1a1a] overflow-hidden">
+                <img src="/blog/the-mole-title.jpg" alt="Hosting The Mole" class="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-500" />
+              </div>
+              <div class="p-6 flex flex-col flex-1">
+                <p class="text-xs uppercase tracking-widest text-gray-600 mb-3">Game Design</p>
+                <h3 class="font-serif text-xl text-white/90 mb-2 group-hover:text-white transition-colors duration-300">Hosting The Mole</h3>
+                <p class="text-gray-400 text-sm leading-relaxed font-light">
+                  I hosted my own version of my favorite childhood show with a $1000 grand prize. It lived up to the hype.
+                </p>
+              </div>
+            </a>
+          </article>
+
+        </div>
+      </div>
     </section>
 
     <!-- ─────────────── Footer ─────────────── -->
@@ -287,19 +410,54 @@ import Layout from '../layouts/Layout.astro';
 
     // 4. Card hover effects
     document.querySelector('[data-card="scarlet"]')?.addEventListener('mouseenter', function(this: HTMLElement) {
-      this.style.boxShadow = '0 20px 60px rgba(220,38,38,0.35)';
+      this.style.boxShadow = '0 20px 60px rgba(153,27,27,0.4)';
     });
     document.querySelector('[data-card="scarlet"]')?.addEventListener('mouseleave', function(this: HTMLElement) {
-      this.style.boxShadow = '0 20px 50px rgba(220,38,38,0.15)';
-    });
-    document.querySelector('[data-card="dark"]')?.addEventListener('mouseenter', function(this: HTMLElement) {
-      this.style.borderColor = 'rgba(220,38,38,0.4)';
-    });
-    document.querySelector('[data-card="dark"]')?.addEventListener('mouseleave', function(this: HTMLElement) {
-      this.style.borderColor = 'rgba(255,255,255,0.10)';
+      this.style.boxShadow = '0 20px 50px rgba(153,27,27,0.22)';
     });
 
-    // 5. Hero parallax fade
+    // 5. SUSpects Live interest form
+    const interestForm = document.getElementById('interest-form') as HTMLFormElement | null;
+    const interestInput = document.getElementById('interest-email') as HTMLInputElement | null;
+    const interestSubmit = document.getElementById('interest-submit') as HTMLButtonElement | null;
+    const interestStatus = document.getElementById('interest-status');
+
+    interestForm?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!interestInput || !interestStatus) return;
+
+      const email = interestInput.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        interestStatus.textContent = 'Please enter a valid email address.';
+        interestInput.focus();
+        return;
+      }
+
+      if (interestSubmit) interestSubmit.disabled = true;
+      interestStatus.textContent = 'Adding you to the list…';
+
+      try {
+        const res = await fetch('/api/interest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+        const data: any = await res.json().catch(() => ({}));
+
+        if (res.ok && data?.ok) {
+          interestInput.value = '';
+          interestStatus.textContent = "You're on the list. We'll be in touch.";
+        } else {
+          interestStatus.textContent = data?.error || 'Something went wrong. Please try again.';
+        }
+      } catch {
+        interestStatus.textContent = 'Something went wrong. Please try again.';
+      } finally {
+        if (interestSubmit) interestSubmit.disabled = false;
+      }
+    });
+
+    // 6. Hero parallax fade
     const heroWrapper = document.getElementById('hero-content-wrapper');
     window.addEventListener('scroll', () => {
       const scrolled = window.scrollY;

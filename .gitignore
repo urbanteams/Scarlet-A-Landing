@@ -22,3 +22,20 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# collected interest-list emails (PII — keep out of git)
+data/
+
+# stray working files
+IMG_0668.HEIC
+issue.png
+/target2.jpg
+
+# raw blog source images (compressed copies live in public/blog/)
+/blog/
+
+# local editor/agent config
+.claude/
+
+# wrangler local state
+.wrangler/

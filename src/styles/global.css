@@ -9,6 +9,7 @@
   --color-card:        #111111;
   --color-accent:      #DC2626;
   --color-accent-glow: rgba(220, 38, 38, 0.35);
+  --color-accent-deep: #991B1B;  /* muted red for large filled surfaces (SUSpects Live card) */
 
   /* Typography */
   --font-sans:    'Inter', sans-serif;
@@ -103,6 +104,277 @@
   }
   .group:hover .accent-reveal {
     color: var(--color-accent);
+  }
+
+  /* ── Focus ring for controls sitting on the scarlet card ──
+     The global focus ring is accent red, which is invisible on a red surface. */
+  .on-accent-focus:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+  }
+
+  /* ============================================================
+     BLOG — Scarlet Strategy
+     Tailwind v4 here has no typography plugin, so prose styling
+     is hand-written. All blog styles live in this block.
+     ============================================================ */
+
+  /* ── Long-form prose ── */
+  .blog-prose {
+    max-width: 68ch;
+    font-weight: 300;
+    font-size: 1.0625rem;
+    line-height: 1.85;
+    color: #b6b6b6;
+  }
+
+  .blog-prose > p {
+    margin: 0 0 1.65rem;
+  }
+
+  .blog-prose h2 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: clamp(1.6rem, 3vw, 2.05rem);
+    line-height: 1.25;
+    color: rgba(255, 255, 255, 0.92);
+    margin: 3.75rem 0 1.35rem;
+  }
+
+  .blog-prose h3 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 1.35rem;
+    color: rgba(255, 255, 255, 0.88);
+    margin: 2.75rem 0 1rem;
+  }
+
+  /* Tailwind's preflight sets `list-style: none` on ul/ol — restore markers here. */
+  .blog-prose ul {
+    list-style-type: disc;
+    margin: 0 0 1.65rem;
+    padding-left: 1.4rem;
+  }
+
+  .blog-prose ol {
+    list-style-type: decimal;
+    margin: 0 0 1.65rem;
+    padding-left: 1.4rem;
+  }
+
+  .blog-prose li {
+    margin-bottom: 0.85rem;
+    padding-left: 0.35rem;
+  }
+
+  .blog-prose li::marker {
+    color: var(--color-accent);
+  }
+
+  .blog-prose strong {
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.94);
+  }
+
+  .blog-prose em {
+    font-style: italic;
+    color: #cfcfcf;
+  }
+
+  .blog-prose a {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent-glow);
+    text-underline-offset: 4px;
+    transition: color 0.3s ease, text-decoration-color 0.3s ease;
+  }
+
+  .blog-prose a:hover {
+    color: var(--color-accent);
+    text-decoration-color: var(--color-accent);
+  }
+
+  .blog-prose h4 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 1.15rem;
+    color: rgba(255, 255, 255, 0.85);
+    margin: 2.25rem 0 0.85rem;
+  }
+
+  /* ── Figures ── */
+  .blog-figure {
+    margin: 2.75rem 0;
+  }
+
+  /* Centered figure for small source images — capped so it never upscales
+     far past its native width and goes soft. */
+  .blog-figure-narrow img {
+    max-width: 420px;
+    margin-inline: auto;
+  }
+
+  /* Side-by-side image pairs. Stacks on narrow screens. */
+  .blog-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: center;
+  }
+
+  @media (max-width: 639px) {
+    .blog-gallery-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  /* Gallery art (avatars, transparent PNGs) reads better without a frame. */
+  .blog-gallery .blog-gallery-grid img {
+    border: 0;
+    border-radius: 0.5rem;
+  }
+
+  .blog-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 0.875rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .blog-figure figcaption {
+    margin-top: 0.9rem;
+    text-align: center;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: #7b7b7b;
+  }
+
+  .blog-figure figcaption a {
+    color: #9a9a9a;
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent-glow);
+    text-underline-offset: 4px;
+    transition: color 0.3s ease, text-decoration-color 0.3s ease;
+  }
+
+  .blog-figure figcaption a:hover {
+    color: var(--color-accent);
+    text-decoration-color: var(--color-accent);
+  }
+
+  /* ── Responsive video embeds ── */
+  .blog-embed {
+    position: relative;
+    margin: 2.75rem 0;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 0.875rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: var(--color-card);
+  }
+
+  .blog-embed iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  /* ── Divider between stacked posts ── */
+  .blog-divider {
+    height: 1px;
+    border: 0;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(255, 255, 255, 0.12),
+      transparent
+    );
+  }
+
+  /* ── Post anchor offset, so sidebar jumps don't clip the title ── */
+  .blog-post {
+    scroll-margin-top: 2.5rem;
+  }
+
+  /* ── Expandable sidebar ── */
+  .blog-sidebar {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    z-index: 40;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .blog-sidebar-panel {
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+    max-height: 70vh;
+    pointer-events: none;
+    transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+  }
+
+  .blog-sidebar.open .blog-sidebar-panel {
+    width: 17.5rem;
+    opacity: 1;
+    overflow-y: auto;
+    pointer-events: auto;
+  }
+
+  .blog-sidebar-link {
+    display: block;
+    padding: 0.6rem 0.85rem;
+    border-left: 2px solid transparent;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: #8a8a8a;
+    text-decoration: none;
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .blog-sidebar-link:hover {
+    color: rgba(255, 255, 255, 0.9);
+    border-left-color: rgba(220, 38, 38, 0.5);
+  }
+
+  .blog-sidebar-link.active {
+    color: #ffffff;
+    border-left-color: var(--color-accent);
+  }
+
+  .blog-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    opacity: 0;
+    pointer-events: none;
+    background-color: rgba(5, 5, 5, 0.75);
+    transition: opacity 0.35s ease;
+  }
+
+  /* Backdrop is mobile-only; on wider screens the panel sits beside the content. */
+  @media (max-width: 767px) {
+    .blog-sidebar {
+      top: auto;
+      bottom: 1.5rem;
+      transform: none;
+      align-items: flex-end;
+    }
+
+    .blog-sidebar.open .blog-sidebar-panel {
+      width: min(17.5rem, calc(100vw - 5.5rem));
+      max-height: 60vh;
+    }
+
+    .blog-sidebar.open ~ .blog-sidebar-backdrop {
+      opacity: 1;
+      pointer-events: auto;
+    }
   }
 
   /* ── Accent Glow Button ── */

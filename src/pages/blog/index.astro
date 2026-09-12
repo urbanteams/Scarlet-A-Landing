@@ -1,0 +1,189 @@
+---
+export const prerender = true;
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+
+// Newest first. `date` is sort-order metadata only and is never rendered —
+// posts are evergreen.
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const rendered = await Promise.all(
+  posts.map(async (post) => ({ post, Content: (await render(post)).Content }))
+);
+---
+
+<Layout
+  title="Scarlet Strategy — Scarlet A Games"
+  description="Scarlet Strategy: the Scarlet A Games blog about the art of strategy."
+  canonical="https://scarletagames.com/blog"
+>
+  <div class="min-h-screen bg-[#050505] selection:bg-[#DC2626] selection:text-white">
+
+    <!-- Global Noise Overlay -->
+    <div class="noise-overlay"></div>
+
+    <!-- ─────────────── Logo ─────────────── -->
+    <div class="container mx-auto px-6 pt-10">
+      <a href="/" class="text-4xl font-cursive hover:opacity-80 transition-opacity duration-300" style="letter-spacing: 0.01em;">
+        Scarlet <span style="color: var(--color-accent);">A</span> Games
+      </a>
+    </div>
+
+    <!-- ─────────────── Expandable Post Sidebar ─────────────── -->
+    <div id="blog-sidebar" class="blog-sidebar">
+      <button
+        id="blog-sidebar-toggle"
+        type="button"
+        class="flex items-center justify-center w-11 h-11 ml-3 rounded-full bg-[#111] border border-white/10 text-gray-400 hover:text-white hover:border-[rgba(220,38,38,0.4)] transition-all duration-300 shrink-0"
+        aria-expanded="false"
+        aria-controls="blog-sidebar-panel"
+        aria-label="Show post list"
+      >
+        <iconify-icon id="blog-sidebar-icon" icon="lucide:list" width="18" height="18"></iconify-icon>
+      </button>
+
+      <nav id="blog-sidebar-panel" class="blog-sidebar-panel ml-2" aria-label="Blog posts">
+        <div class="bg-[#111] border border-white/10 rounded-2xl py-4 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+          <p class="px-4 pb-3 text-xs uppercase tracking-widest text-gray-600">Posts</p>
+          {rendered.map(({ post }) => (
+            <a href={`#${post.data.slug}`} class="blog-sidebar-link" data-target={post.data.slug}>
+              {post.data.title}
+            </a>
+          ))}
+        </div>
+      </nav>
+    </div>
+    <div id="blog-sidebar-backdrop" class="blog-sidebar-backdrop md:hidden"></div>
+
+    <!-- ─────────────── Masthead ─────────────── -->
+    <section class="pt-16 pb-16 relative">
+      <div class="container mx-auto px-6 text-center">
+        <div class="reveal">
+          <h1 class="font-cursive mb-4" style="font-size: clamp(4.5rem, 9vw, 7.5rem); color: #ffe0e0; text-shadow: 0 0 14px rgba(255,255,255,0.65); line-height: 1.15;">
+            Scarlet Str<span style="color: var(--color-accent);">a</span>tegy
+          </h1>
+        </div>
+        <div class="reveal" style="transition-delay: 150ms;">
+          <p class="text-lg text-gray-400 max-w-xl mx-auto font-light tracking-wide">
+            On strategy, game design, and their intersection
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────── Post Stream ─────────────── -->
+    <div class="container mx-auto px-6">
+      {rendered.map(({ post, Content }, i) => (
+        <>
+          {i > 0 && (
+            <hr class="blog-divider max-w-3xl mx-auto my-24" />
+          )}
+          <article id={post.data.slug} class="blog-post max-w-3xl mx-auto py-12">
+            <header class="reveal mb-12">
+              <h2 class="font-serif text-white/95 leading-tight mb-5" style="font-size: clamp(2.1rem, 5vw, 3.25rem);">
+                {post.data.title}
+              </h2>
+              <p class="text-xs uppercase tracking-widest text-gray-500">
+                By {post.data.author}
+              </p>
+            </header>
+
+            <div class="blog-prose mx-auto">
+              <Content />
+            </div>
+
+            <div class="mt-14">
+              <a
+                href={`/blog/${post.data.slug}`}
+                class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-gray-600 hover:text-[#DC2626] transition-colors duration-300 no-underline"
+              >
+                <iconify-icon icon="lucide:link" width="14" height="14"></iconify-icon>
+                Permalink
+              </a>
+            </div>
+          </article>
+        </>
+      ))}
+    </div>
+
+    <div class="pb-32"></div>
+
+    <!-- ─────────────── Footer ─────────────── -->
+    <footer id="contact" class="py-20 bg-[#050505] relative overflow-hidden" style="border-top: 1px solid rgba(255,255,255,0.05);">
+      <div class="container mx-auto px-6 relative z-10">
+        <div class="flex flex-col items-center gap-10">
+          <p class="text-2xl text-gray-400 tracking-wide">Our Community, Content, and Updates</p>
+          <div class="flex items-center gap-8">
+            <a href="https://discord.gg/Pd7HVKQd8T" class="text-gray-400 hover:text-[#DC2626] transition-colors duration-300" target="_blank" rel="noopener noreferrer" aria-label="Discord">
+              <iconify-icon icon="simple-icons:discord" width="48" height="48"></iconify-icon>
+            </a>
+            <a href="https://www.youtube.com/@ScarletAGames" class="text-gray-400 hover:text-[#DC2626] transition-colors duration-300" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+              <iconify-icon icon="simple-icons:youtube" width="48" height="48"></iconify-icon>
+            </a>
+          </div>
+          <p class="text-sm text-gray-600 self-end">&copy; 2026 Scarlet A Games. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // ── Reveal on scroll ──
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('active');
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // ── Expandable sidebar ──
+    const sidebar = document.getElementById('blog-sidebar');
+    const toggle = document.getElementById('blog-sidebar-toggle');
+    const icon = document.getElementById('blog-sidebar-icon');
+    const backdrop = document.getElementById('blog-sidebar-backdrop');
+
+    function setSidebar(open: boolean) {
+      if (!sidebar || !toggle) return;
+      sidebar.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? 'Hide post list' : 'Show post list');
+      icon?.setAttribute('icon', open ? 'lucide:x' : 'lucide:list');
+    }
+
+    toggle?.addEventListener('click', () => {
+      setSidebar(!sidebar?.classList.contains('open'));
+    });
+
+    backdrop?.addEventListener('click', () => setSidebar(false));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') setSidebar(false);
+    });
+
+    // Close the panel after picking a post on narrow screens, where it overlays content.
+    const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('.blog-sidebar-link'));
+    links.forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.matchMedia('(max-width: 767px)').matches) setSidebar(false);
+      });
+    });
+
+    // ── Scrollspy: highlight the post currently in view ──
+    const articles = Array.from(document.querySelectorAll<HTMLElement>('.blog-post'));
+    if (articles.length) {
+      const spy = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          links.forEach(l => l.classList.toggle('active', l.dataset.target === entry.target.id));
+        });
+      }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+
+      articles.forEach(a => spy.observe(a));
+      links[0]?.classList.add('active');
+    }
+  </script>
+</Layout>

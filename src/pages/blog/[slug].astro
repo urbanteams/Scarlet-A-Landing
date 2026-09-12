@@ -1,0 +1,108 @@
+---
+export const prerender = true;
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.data.slug },
+    props: { post },
+  }));
+}
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<Layout
+  title={`${post.data.title} — Scarlet Strategy`}
+  description={post.data.excerpt}
+  canonical={`https://scarletagames.com/blog/${post.data.slug}`}
+>
+  <div class="min-h-screen bg-[#050505] selection:bg-[#DC2626] selection:text-white">
+
+    <!-- Global Noise Overlay -->
+    <div class="noise-overlay"></div>
+
+    <!-- ─────────────── Logo ─────────────── -->
+    <div class="container mx-auto px-6 pt-10">
+      <a href="/" class="text-4xl font-cursive hover:opacity-80 transition-opacity duration-300" style="letter-spacing: 0.01em;">
+        Scarlet <span style="color: var(--color-accent);">A</span> Games
+      </a>
+    </div>
+
+    <!-- ─────────────── Post ─────────────── -->
+    <div class="container mx-auto px-6">
+      <article class="max-w-3xl mx-auto pt-16 pb-12">
+        <div class="mb-10">
+          <a
+            href="/blog"
+            class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-gray-500 hover:text-[#DC2626] transition-colors duration-300 no-underline"
+          >
+            <iconify-icon icon="lucide:arrow-left" width="14" height="14"></iconify-icon>
+            Scarlet Strategy
+          </a>
+        </div>
+
+        <header class="reveal mb-12">
+          <h1 class="font-serif text-white/95 leading-tight mb-5" style="font-size: clamp(2.1rem, 5vw, 3.25rem);">
+            {post.data.title}
+          </h1>
+          <p class="text-xs uppercase tracking-widest text-gray-500">
+            By {post.data.author}
+          </p>
+        </header>
+
+        <div class="blog-prose mx-auto">
+          <Content />
+        </div>
+
+        <div class="mt-20 text-center">
+          <a
+            href="/blog"
+            class="inline-flex items-center gap-2 text-sm uppercase tracking-widest text-white/70 hover:text-[#DC2626] transition-colors duration-300 no-underline"
+          >
+            Read more on Scarlet Strategy
+            <iconify-icon icon="lucide:arrow-right" width="16" height="16"></iconify-icon>
+          </a>
+        </div>
+      </article>
+    </div>
+
+    <div class="pb-20"></div>
+
+    <!-- ─────────────── Footer ─────────────── -->
+    <footer id="contact" class="py-20 bg-[#050505] relative overflow-hidden" style="border-top: 1px solid rgba(255,255,255,0.05);">
+      <div class="container mx-auto px-6 relative z-10">
+        <div class="flex flex-col items-center gap-10">
+          <p class="text-2xl text-gray-400 tracking-wide">Our Community, Content, and Updates</p>
+          <div class="flex items-center gap-8">
+            <a href="https://discord.gg/Pd7HVKQd8T" class="text-gray-400 hover:text-[#DC2626] transition-colors duration-300" target="_blank" rel="noopener noreferrer" aria-label="Discord">
+              <iconify-icon icon="simple-icons:discord" width="48" height="48"></iconify-icon>
+            </a>
+            <a href="https://www.youtube.com/@ScarletAGames" class="text-gray-400 hover:text-[#DC2626] transition-colors duration-300" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+              <iconify-icon icon="simple-icons:youtube" width="48" height="48"></iconify-icon>
+            </a>
+          </div>
+          <p class="text-sm text-gray-600 self-end">&copy; 2026 Scarlet A Games. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('active');
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+  </script>
+</Layout>

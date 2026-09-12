@@ -14,6 +14,30 @@ if (url.pathname === '/newgame' || url.pathname.startsWith('/newgame/')) {
 ```
 Then commit, push, and Cloudflare Pages will auto-deploy.
 
+### Apps that serve at root (no base path)
+
+If the external app serves at `/` instead of `/<game>` (i.e. it has no Vite `base` or `vercel.json` rewrites), strip the prefix before forwarding:
+```ts
+const strippedPath = url.pathname.replace(/^\/newgame\/?/, '/');
+const targetUrl = `https://newgame-app.vercel.app${strippedPath}${url.search}`;
+```
+Skip Step 2 entirely in this case — no `base` or `vercel.json` changes needed in the game repo.
+
+**Two extra requirements for root-based apps:**
+
+1. **Forward the full request** — not just the URL. A plain `fetch(url)` defaults to GET, breaking POST API calls. Pass method, headers, and body:
+   ```ts
+   const response = await fetch(targetUrl, {
+     method: context.request.method,
+     headers: context.request.headers,
+     body: context.request.method !== 'GET' && context.request.method !== 'HEAD' ? context.request.body : undefined,
+   });
+   ```
+2. **Rewrite absolute API paths in the HTML** — if the app uses `fetch('/api/...')`, those will bypass the proxy. Rewrite them in the HTML response:
+   ```ts
+   html = html.replaceAll("fetch('/api/", "fetch('/newgame/api/");
+   ```
+
 ## Step 2: Configure the Vercel project (the game's repo)
 
 **Both** of these changes are needed in the game's repo:
@@ -59,7 +83,15 @@ Commit, push, and Vercel will auto-deploy.
 | `/triangle` | `triangle-teal.vercel.app` | Scarlet Triangle game |
 | `/666` | `666-one-theta.vercel.app` | 666 dice game |
 | `/target` | `target-number.vercel.app` | Target Number game |
-| `/gazump` | `gazump.fly.dev` | Gazump bidding game (Fly.io, Python) |
+| `/gazump` | `gazump.vercel.app` | Gazump bidding game — serves at root, prefix stripped in middleware. Custom favicon (gazump.png) and title ("GAZUMP!") injected via HTML rewriting. |
+
+## Custom favicon and title per game
+
+The middleware can inject a custom favicon and override the tab title for any proxied game by rewriting the HTML response. See `/gazump` and `/triangle` in `middleware.ts` for examples. The pattern:
+1. Intercept `/<game>/favicon.(png|svg|ico)` requests and serve the asset directly (from `public/` or inline SVG)
+2. In HTML responses, inject a `<link rel="icon">` into `<head>` and optionally replace `<title>` via regex
+
+Place favicon images in `public/` (e.g. `public/gazump.png`). The middleware fetches them via the origin URL so they're served with correct content types.
 
 ## Static asset naming caveat
 

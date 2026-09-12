@@ -4,11 +4,14 @@ import '../styles/global.css';
 interface Props {
   title?: string;
   description?: string;
+  /** Absolute or root-relative URL search engines should treat as primary. */
+  canonical?: string;
 }
 
 const {
   title = 'Scarlet A Games',
   description = 'Bold games for bold players. We create arenas for you to have legendary moments.',
+  canonical,
 } = Astro.props;
 ---
 
@@ -18,6 +21,7 @@ const {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
     <title>{title}</title>
 
     <!-- Iconify icons -->
