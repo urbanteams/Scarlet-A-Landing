@@ -215,8 +215,8 @@ function init() {
     drawContours(ctx, w, h, mode, 0, mode === 'hero' && !reducedMotion ? time * 0.000012 : 0);
 
     if (mode === 'hero') {
-      const rx = w < 768 ? w * 0.6 : Math.min(w * 0.36, 560);
-      clearEllipse(ctx, w / 2, h * 0.53, rx, Math.min(h * 0.3, 300));
+      const rx = w < 768 ? w * 0.72 : Math.min(w * 0.44, 700);
+      clearEllipse(ctx, w / 2, h * 0.47, rx, Math.min(h * 0.37, 380));
       return;
     }
 
