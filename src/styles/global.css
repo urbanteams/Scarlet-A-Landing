@@ -22,20 +22,6 @@
    ============================================================ */
 
 @layer base {
-  /* ── Keyframes ── */
-  @keyframes float-orb-left {
-    0%, 100% { transform: translateY(0px) scale(1); }
-    50%      { transform: translateY(-28px) scale(1.04); }
-  }
-  @keyframes float-orb-right {
-    0%, 100% { transform: translateY(0px) scale(1); }
-    50%      { transform: translateY(24px) scale(0.97); }
-  }
-  @keyframes pulse-ring {
-    0%, 100% { opacity: 0.15; transform: scale(1); }
-    50%      { opacity: 0.35; transform: scale(1.06); }
-  }
-
   *, *::before, *::after {
     box-sizing: border-box;
   }
@@ -77,11 +63,6 @@
     transform: translateY(0);
   }
 
-  /* ── Decorative Floating Orbs ── */
-  .orb-left  { animation: float-orb-left  14s ease-in-out infinite; }
-  .orb-right { animation: float-orb-right 18s ease-in-out infinite; }
-  .pulse-ring { animation: pulse-ring 6s ease-in-out infinite; }
-
   /* ── Noise Overlay ── */
   .noise-overlay {
     position: fixed;
@@ -111,6 +92,90 @@
   .on-accent-focus:focus-visible {
     outline: 2px solid #ffffff;
     outline-offset: 3px;
+  }
+
+  /* ============================================================
+     CONTOUR MAP BACKGROUND
+     Canvases are drawn by src/scripts/contour-map.ts. Each page root
+     is `isolate`, so the z-index: -10 layers sit above the root's
+     background and below all page content.
+     ============================================================ */
+
+  /* Hero: full-strength map, fills the hero section */
+  .contour-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .contour-hero-fade {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 22%;
+    background: linear-gradient(to bottom, transparent, var(--color-bg));
+  }
+
+  /* Page layer: faint map fixed to the viewport, redrawn as the page scrolls */
+  .contour-fixed {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -10;
+    display: block;
+    pointer-events: none;
+  }
+
+  /* Card-based pages: dimmer through the middle */
+  .contour-fixed--wide {
+    -webkit-mask-image: linear-gradient(to right, #000, rgba(0, 0, 0, 0.4) 30%, rgba(0, 0, 0, 0.4) 70%, #000);
+    mask-image: linear-gradient(to right, #000, rgba(0, 0, 0, 0.4) 30%, rgba(0, 0, 0, 0.4) 70%, #000);
+  }
+
+  /* Reading pages: margins only, the text column stays plain black */
+  .contour-fixed--margins {
+    -webkit-mask-image: linear-gradient(to right, #000, #000 calc(50% - 36rem), transparent calc(50% - 27rem), transparent calc(50% + 27rem), #000 calc(50% + 36rem), #000);
+    mask-image: linear-gradient(to right, #000, #000 calc(50% - 36rem), transparent calc(50% - 27rem), transparent calc(50% + 27rem), #000 calc(50% + 36rem), #000);
+  }
+
+  @media (max-width: 1100px) {
+    .contour-fixed--margins {
+      display: none;
+    }
+  }
+
+  /* Masthead: mid-strength map behind a page title, fading out downward */
+  .contour-masthead {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 780px;
+    z-index: -10;
+    display: block;
+    pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent);
+    mask-image: linear-gradient(to bottom, #000 35%, transparent);
+  }
+
+  /* Footer: scarlet horizon glow and line along the top edge */
+  .footer-horizon {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 46% 130% at 50% 0%, rgba(220, 38, 38, 0.2), rgba(153, 27, 27, 0.06) 50%, transparent 72%);
+  }
+
+  .footer-horizon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 110, 100, 0.6), transparent);
   }
 
   /* ============================================================

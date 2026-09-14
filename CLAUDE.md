@@ -22,7 +22,8 @@ npm run preview  # Serve the production build locally
 ```
 src/
 ├── middleware.ts            # Astro middleware — proxies external game routes (e.g. /triangle → triangle-teal.vercel.app)
-├── styles/global.css        # Design tokens (@theme), keyframes, component classes (.reveal, .orb-*, .glow-btn, etc.)
+├── styles/global.css        # Design tokens (@theme), component classes (.reveal, .contour-*, .glow-btn, etc.)
+├── scripts/contour-map.ts   # Draws the contour map background on every <canvas data-contour>
 ├── layouts/Layout.astro     # HTML shell: Google Fonts (Inter, Playfair Display, Allura), Iconify CDN, global.css import
 ├── pages/index.astro        # Landing page — all sections inline (Nav, Hero, Games, Experiences, About Us, Blog, Footer) + client-side JS
 ├── pages/library.astro      # Game library page — catalog of all games
@@ -35,7 +36,15 @@ Games hosted on Vercel are proxied through `src/middleware.ts` so they appear un
 
 ## Design System — Dark Cinematic
 
-The visual language uses a **pure black base `#050505`** with atmospheric red gradients, floating orbs, scroll-reveal animations, and parallax effects.
+The visual language uses a **pure black base `#050505`** with a scarlet **contour map** background, scroll-reveal animations, and parallax effects.
+
+**Contour map.** `<canvas data-contour="hero|masthead|page">` elements are drawn by
+[src/scripts/contour-map.ts](src/scripts/contour-map.ts), imported from each page's `<script>`. All canvases
+sample one noise field in page coordinates, so they line up as one landscape. Full strength only in the
+landing hero; everything below it, plus Library and Blog, uses the faint treatment — reading text always
+sits on plain black. Page roots are `relative isolate` so the `z-index: -10` layers stay under content.
+Masthead canvases take optional clearings: `data-clear-y`/`data-clear-ry` (ellipse behind a title) and
+`data-column`/`data-column-top` (a clear column for prose).
 
 ### Color tokens (from `@theme`)
 - `--color-bg: #050505` — page background
@@ -52,8 +61,10 @@ The visual language uses a **pure black base `#050505`** with atmospheric red gr
 | Class | Use |
 |---|---|
 | `.reveal` / `.reveal.active` | Scroll-triggered fade-up animation |
-| `.orb-left` / `.orb-right` | Floating decorative orb animations |
-| `.pulse-ring` | Pulsing glow ring on orbs |
+| `.contour-layer` / `.contour-hero-fade` | Full-strength contour canvas filling the landing hero |
+| `.contour-masthead` | Mid-strength contour canvas behind a page title, fading out downward |
+| `.contour-fixed` + `--wide` / `--margins` | Faint viewport-fixed contour canvas; `--wide` dims the middle (card pages), `--margins` keeps the text column clear (reading pages, hidden under 1100px) |
+| `.footer-horizon` | Scarlet horizon glow and line along the footer's top edge |
 | `.noise-overlay` | Fixed film-grain texture overlay |
 | `.parallax-card-up` / `.parallax-card-down` | Scroll-driven parallax offset |
 | `.glow-btn` | Button with red glow on hover (via `::before`) |

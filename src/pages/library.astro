@@ -4,10 +4,14 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Game Library — Scarlet A Games" description="Browse the Scarlet A Games library. Bold games for bold players.">
-  <div class="min-h-screen bg-[#050505] selection:bg-[#DC2626] selection:text-white">
+  <div class="relative isolate min-h-screen bg-[#050505] selection:bg-[#DC2626] selection:text-white">
 
     <!-- Global Noise Overlay -->
     <div class="noise-overlay"></div>
+
+    <!-- Contour map: behind the header, then faint behind the game cards -->
+    <canvas class="contour-masthead" data-contour="masthead" data-clear-y="215" data-clear-ry="130" aria-hidden="true"></canvas>
+    <canvas class="contour-fixed contour-fixed--wide" data-contour="page" aria-hidden="true"></canvas>
 
     <!-- ─────────────── Logo ─────────────── -->
     <div class="container mx-auto px-6 pt-10">
@@ -134,6 +138,7 @@ import Layout from '../layouts/Layout.astro';
 
     <!-- ─────────────── Footer ─────────────── -->
     <footer id="contact" class="py-20 bg-[#050505] relative overflow-hidden" style="border-top: 1px solid rgba(255,255,255,0.05);">
+      <div class="footer-horizon" aria-hidden="true"></div>
       <div class="container mx-auto px-6 relative z-10">
         <div class="flex flex-col items-center gap-10">
           <p class="text-2xl text-gray-400 tracking-wide">Our Community, Content, and Updates</p>
@@ -153,6 +158,8 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <script>
+    import '../scripts/contour-map';
+
     // Reveal on scroll
     const revealObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
