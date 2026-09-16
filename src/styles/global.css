@@ -110,6 +110,15 @@
     display: block;
   }
 
+  /* The nav is fixed, so the hero's own box starts under it. Padding the top by
+     the nav's height (py-8 + the 2.25rem lockup = 118px) plus the shared 5rem
+     gutter makes `items-center` land the copy on the midpoint between the bottom
+     of the nav and the bottom of the viewport, at any viewport height. */
+  .hero-section {
+    padding-top: calc(118px + 5rem);
+    padding-bottom: 5rem;
+  }
+
   .contour-hero-fade {
     position: absolute;
     inset: auto 0 0 0;
