@@ -215,8 +215,20 @@ function init() {
     drawContours(ctx, w, h, mode, 0, mode === 'hero' && !reducedMotion ? time * 0.000012 : 0);
 
     if (mode === 'hero') {
-      const rx = w < 768 ? w * 0.72 : Math.min(w * 0.44, 700);
-      clearEllipse(ctx, w / 2, h * 0.47, rx, Math.min(h * 0.37, 380));
+      // Measure the copy so the clearing covers the whole block — logo, tagline,
+      // blurb and button — whatever size the wordmark is set at.
+      const copy = document.getElementById('hero-content-wrapper');
+      const box = copy?.getBoundingClientRect();
+      const canvasTop = cv.getBoundingClientRect().top;
+      let cy = h * 0.47;
+      let rx = w < 768 ? w * 0.72 : Math.min(w * 0.44, 700);
+      let ry = Math.min(h * 0.37, 380);
+      if (box && box.height) {
+        cy = box.top - canvasTop + box.height / 2;
+        ry = box.height * 0.84;                       // the gradient fades out well before rx
+        rx = Math.max(rx, Math.min(box.width * 0.72, w * 0.62));
+      }
+      clearEllipse(ctx, w / 2, cy, rx, ry);
       return;
     }
 
