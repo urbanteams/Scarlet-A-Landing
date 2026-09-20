@@ -5,17 +5,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev      # Dev server at http://localhost:4321 (hot reload)
-npm run build    # Production build to dist/
-npm run preview  # Serve the production build locally
+npm run dev        # Dev server at http://localhost:4321 (hot reload)
+npm run build      # Production build to dist/
+npx wrangler dev   # Serve the built dist/ on the real Worker runtime (port 8787)
 ```
+
+`npm run preview` does **not** work — the Cloudflare adapter rejects it ("does not support the
+preview command"). Use `npx wrangler dev` after `npm run build` to check production behaviour.
 
 ## Stack
 
-- **Astro 5** (static output, no SSR) + **Tailwind CSS v4**
+- **Astro 5** (`output: 'server'` + Cloudflare adapter; every page sets `prerender = true` except `api/interest.ts`) + **Tailwind CSS v4**
 - Tailwind v4 is configured via `@tailwindcss/vite` in `astro.config.mjs` — there is **no `tailwind.config.js`**. All configuration lives in `src/styles/global.css`.
 - **Iconify** loaded via CDN for icons (lucide icon set)
-- **Hosted on Cloudflare Pages** (via Wrangler). Wrangler auto-installs `@astrojs/cloudflare` adapter during deploy.
+- **Hosted on Cloudflare.** `@astrojs/cloudflare` is a committed dependency; `wrangler.jsonc` points at `dist/_worker.js/index.js`.
+
+## Deploying
+
+**Pushing to `main` is the deploy.** Cloudflare builds from the GitHub repo itself — there is no
+CI workflow, `dist/` is gitignored and has never been tracked, and you do not run `wrangler deploy`
+locally. Verify with `npm run build` then `npx wrangler dev` before pushing.
+
+Untracked junk lives at the repo root (raw image drops in `blog/`, stray screenshots). `.gitignore`
+covers the known ones, but **never `git add -A` blindly** — check `git status --short` first.
 
 ## Architecture
 
@@ -27,7 +39,11 @@ src/
 ├── layouts/Layout.astro     # HTML shell: Google Fonts (Inter, Playfair Display, Allura), Iconify CDN, global.css import
 ├── pages/index.astro        # Landing page — all sections inline (Nav, Hero, Games, Experiences, About Us, Blog, Footer) + client-side JS
 ├── pages/library.astro      # Game library page — catalog of all games
-└── pages/api/interest.ts    # POST endpoint for the SUSpects Live interest list (server-rendered)
+├── pages/blog/index.astro   # /blog — every post stacked for continuous scroll + expandable sidebar
+├── pages/blog/[slug].astro  # /blog/<slug> — per-post permalink pages
+├── pages/api/interest.ts    # POST endpoint for the SUSpects Live interest list (server-rendered)
+├── content.config.ts        # Blog collection schema (glob loader over src/content/blog)
+└── content/blog/*.md        # One markdown file per post
 ```
 
 ## External Game Routing
@@ -84,15 +100,52 @@ All content lives directly in [src/pages/index.astro](src/pages/index.astro):
 - **Game cards**: The grid inside `#games` (also mirrored in `library.astro`)
 - **SUSpects Live card + interest form**: The `#experiences` section
 - **Bio and portrait**: The `#about` section (portrait loads `/about.jpg`; if that file is missing the `onerror` handler drops the `<img>` and an icon placeholder shows through)
-- **Blog link and article thumbnails**: The `#blog` section
+- **Blog link and article thumbnails**: The `#blog` section — hardcoded cards that must be kept in sync with `src/content/blog/` by hand
 - **Footer social links**: The `#contact` footer
+
+## Blog — "Scarlet Strategy" (`/blog`)
+
+Posts are markdown files in `src/content/blog/`, loaded as an Astro content collection
+(`src/content.config.ts`). **Adding a post = dropping in one file**; both `/blog` and its
+permalink page pick it up automatically.
+
+Frontmatter: `title`, `slug`, `excerpt`, `tag` (`Strategy` | `Game Design`), `date`, `author`.
+
+- **`date` is sort-order metadata only and is never rendered.** Posts must read as evergreen —
+  do not surface dates anywhere in the UI. Newest first.
+- **Author is always "Devon Sampson."**
+- `/blog` renders every post stacked, so scrolling flows from one into the next. Fine to ~20
+  posts; past that, add pagination or lazy-loading.
+- Content is authored by pasting **WordPress block-editor markup**, converted by hand: strip
+  `<!-- wp:* -->` comments, `<em>`/`<strong>` → markdown emphasis, `<h2>` → `##`, lists → `-`.
+  Figures and video embeds stay as raw HTML so captions survive (markdown allows inline HTML).
+- Post images go in `public/blog/` (compressed). Raw originals dropped in the root `blog/`
+  folder are gitignored — compress with `sips` or `cwebp` before copying into `public/blog/`.
+  WebP is fine and well supported.
+- Blog-specific styles are the `.blog-*` classes in `global.css`: `.blog-prose`, `.blog-figure`,
+  `.blog-figure-narrow` (centered, capped at 420px for small source images), `.blog-gallery-grid`,
+  `.blog-embed` (16:9 iframes), `.blog-divider`, `.blog-sidebar*`.
+
+**The landing page blog cards are hardcoded**, not generated from the collection — the three
+`<article>` blocks in `#blog` of `index.astro` must be updated by hand when posts change.
+
+## Gotchas
+
+- **Never add a `/blog` proxy route to `middleware.ts`.** It would intercept `/blog/*.jpg` and
+  break every post image. Same class of bug as the asset-prefix caveat in `vercel.md`.
+- **Tailwind v4 preflight sets `list-style: none`.** Any prose block needs an explicit
+  `list-style-type` or bullets vanish (see `.blog-prose ul` / `ol`).
+- **A stale `.astro/data-store.json` causes spurious `Duplicate id` warnings** on build after
+  editing content files while the dev server is running. `rm -rf .astro/data-store.json` clears it.
+- **`curl` against `player.vimeo.com` returns 401** even for public videos — Vimeo blocks
+  non-browser requests. Check embeds in a real browser, not with curl.
 
 ## Interest List (SUSpects Live)
 
 The form in `#experiences` POSTs to `/api/interest`, which appends JSON Lines to
 `data/interest-list.jsonl`. That directory is gitignored — it holds real email addresses.
 
-**This only persists locally** (`npm run dev` / `npm run preview`). Cloudflare Workers has a
+**This only persists locally** (`npm run dev`). Cloudflare Workers has a
 read-only filesystem, so in production the write fails, the entry is logged via
 `console.warn` (visible in the Workers log tail — observability is on in `wrangler.jsonc`), and
 the visitor still gets a success response. For durable production storage, replace the body of

@@ -52,6 +52,25 @@
    ============================================================ */
 
 @layer components {
+  .scroll-cue {
+    position: absolute;
+    left: 50%;
+    bottom: 2rem;
+    z-index: 20;
+    transform: translateX(-50%);
+    color: rgba(255, 224, 224, 0.5);
+    animation: scroll-cue-bob 2.4s ease-in-out infinite;
+    transition: color 0.3s;
+  }
+  .scroll-cue:hover { color: rgba(255, 224, 224, 0.9); }
+  @keyframes scroll-cue-bob {
+    0%, 100% { transform: translate(-50%, 0); opacity: 0.5; }
+    50% { transform: translate(-50%, 8px); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-cue { animation: none; }
+  }
+
   /* ── Reveal on Scroll ── */
   .reveal {
     opacity: 0;
