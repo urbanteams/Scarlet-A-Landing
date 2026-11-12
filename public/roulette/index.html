@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Russian Roulette</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Allura&family=Oswald:wght@400;500&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #120A0E; overflow: hidden; overscroll-behavior: none; }
+  canvas#c { position: fixed; left: 0; top: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  .ov, .ov * { box-sizing: border-box; font-family: 'Oswald', 'Arial Narrow', sans-serif; letter-spacing: 0.06em; }
+  input.txt {
+    position: fixed; display: none; background: rgba(36,20,26,0.95); border: 1px solid #667; border-radius: 6px;
+    color: #F2F2F2; text-align: center; text-transform: uppercase; outline: none; padding: 0 8px; margin: 0;
+  }
+  input.txt:focus { border-color: #C9A24A; }
+  input.txt::placeholder { color: #778; }
+  .chat {
+    position: fixed; bottom: 0; display: none; flex-direction: column; background: rgba(36,20,26,0.95);
+    border: 1px solid #667; border-bottom: none; border-radius: 8px 8px 0 0; color: #F2F2F2; z-index: 5;
+  }
+  .chat:focus-within { border-color: #C9A24A; }
+  .chat .ch { height: 30px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 10px;
+    cursor: pointer; text-transform: uppercase; color: #AAB; font-size: 13px; user-select: none; -webkit-user-select: none; }
+  .chat .ch b { font-weight: 500; color: #E7D08A; }
+  .chat .dot { width: 9px; height: 9px; border-radius: 50%; background: #DC143C; box-shadow: 0 0 6px #DC143C; display: none; }
+  .chat.unread .dot { display: block; }
+  .chat .cm { display: none; flex: 1; overflow-y: auto; padding: 6px 10px; font-size: 14px; letter-spacing: 0.02em; }
+  .chat .cm div { margin: 3px 0; max-width: 90%; word-wrap: break-word; overflow-wrap: anywhere; }
+  .chat .cm .me { margin-left: auto; text-align: right; color: #E7D08A; }
+  .chat .cm .them { color: #F2F2F2; }
+  .chat input { display: none; flex: none; height: 34px; margin: 0; border: none; border-top: 1px solid #667; background: #1A0E12;
+    color: #F2F2F2; padding: 0 10px; font-size: 14px; outline: none; border-radius: 0; letter-spacing: 0.02em; }
+  .chat.open .cm { display: block; } .chat.open input { display: block; }
+  #logWin {
+    position: fixed; left: 8px; display: none; flex-direction: column; background: rgba(36,20,26,0.88);
+    border: 1px solid #667; border-radius: 6px; color: #CFCFCF; z-index: 4;
+  }
+  #logWin .lh { height: 24px; flex: none; padding: 0 10px; display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: #AAB; cursor: pointer; user-select: none; -webkit-user-select: none; }
+  #logWin .lb { flex: 1; overflow-y: auto; padding: 2px 10px 6px; font-size: 12px; line-height: 1.35; text-transform: uppercase; }
+  #logWin .lb div { margin: 3px 0; } #logWin .lb span { color: #778; }
+  #logWin .lb .rv { color: #C8BCDC; } #logWin .lb i { font-style: normal; color: #8A8894; float: right; margin-left: 6px; }
+  #logWin.collapsed .lb { display: none; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="ov">
+  <input id="inName" class="txt" maxlength="12" placeholder="YOUR NAME" autocomplete="off" autocapitalize="characters" spellcheck="false">
+  <input id="inCode" class="txt" maxlength="4" placeholder="ROOM CODE" autocomplete="off" autocapitalize="characters" spellcheck="false">
+  <div id="logWin"><div class="lh"><span id="logTitle">LOG</span><span id="logTog">-</span></div><div class="lb" id="logBody"></div></div>
+  <div id="chatL" class="chat" style="left:6px"><div class="ch"><span class="ct"></span><i class="dot"></i></div><div class="cm"></div><input maxlength="300" placeholder="Message" autocomplete="off"></div>
+  <div id="chatR" class="chat" style="right:6px"><div class="ch"><span class="ct"></span><i class="dot"></i></div><div class="cm"></div><input maxlength="300" placeholder="Message" autocomplete="off"></div>
+</div>
+<script>
+"use strict";
+// ═════════════════════════════ CONFIG ═════════════════════════════
+const LOCAL_PORT = (new URLSearchParams(location.search).get('port') || '8787').replace(/\D/g, '') || '8787';   // ?port= for a local server on another port
+const SERVER_URL = (location.protocol === 'file:' || ['localhost', '127.0.0.1', '[::1]', ''].includes(location.hostname))
+  ? 'http://localhost:' + LOCAL_PORT
+  : 'https://roulette-server.oceansdevon.workers.dev';
+const WS_URL = SERVER_URL.replace(/^http/, 'ws');
+
+const LET = 'ABCDEF';
+const COL = {
+  bgDeep: '#120A0E', bgMid: '#261820', goldBase: '#C9A24A', goldHi: '#E7D08A', goldSh: '#8A6A22',
+  white: '#F2F2F2', slotOutline: '#8A8894', accent: '#C0C8D8', denied: '#FF5A6A', scarlet: '#DC143C',
+  teal: '#7AAA9E', lav: '#A898C0', amber: '#C4A068', rose: '#C47878'
+};
+const HUES = {
+  rose:  { fill: '#241818', hov: '#2E2020', col: COL.rose,  lw: 2 },
+  lav:   { fill: '#1E1A24', hov: '#28242E', col: COL.lav,   lw: 2 },
+  teal:  { fill: '#141E1E', hov: '#1E2A2A', col: COL.teal,  lw: 2 },
+  amber: { fill: '#221C12', hov: '#2E261A', col: COL.amber, lw: 2 },
+  grey:  { fill: '#1E1618', hov: '#2A2024', col: '#667', text: '#AAB', lw: 1 }
+};
+
+// ═════════════════════════════ STORAGE / IDENTITY ═════════════════════════════
+const NS = (new URLSearchParams(location.search).get('p') || '').replace(/[^\w-]/g, '').slice(0, 20);
+const K = k => 'rr:' + NS + ':' + k;
+function lsGet(k) { try { return localStorage.getItem(K(k)); } catch (e) { return null; } }
+function lsSet(k, v) { try { if (v == null) localStorage.removeItem(K(k)); else localStorage.setItem(K(k), v); } catch (e) {} }
+let token = lsGet('token');
+if (!token) {
+  const a = new Uint8Array(16); (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => a[i] = Math.random() * 256);
+  token = Array.from(a, b => b.toString(16).padStart(2, '0')).join(''); lsSet('token', token);
+}
+let savedRoom = lsGet('room'), savedName = lsGet('name') || '';
+
+// ═════════════════════════════ AUDIO ═════════════════════════════
+const sfxEls = {};
+function sfx(name, vol) {
+  try {
+    if (!sfxEls[name]) sfxEls[name] = new Audio('audio/' + name + '.mp3');
+    const a = sfxEls[name].cloneNode(); a.volume = vol == null ? 0.5 : vol;
+    const p = a.play(); if (p && p.catch) p.catch(() => {});
+  } catch (e) {}
+}
+let actx = null;
+function ensureAudio() { try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {} }
+function synth(kind) {   // 'click' quiet empty-chamber click, 'bang' loud shot
+  try {
+    ensureAudio(); if (!actx) return;
+    const dur = kind === 'bang' ? 0.45 : 0.05, n = Math.floor(actx.sampleRate * dur);
+    const buf = actx.createBuffer(1, n, actx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, kind === 'bang' ? 2.5 : 6);
+    const src = actx.createBufferSource(); src.buffer = buf;
+    const f = actx.createBiquadFilter(); f.type = kind === 'bang' ? 'lowpass' : 'bandpass'; f.frequency.value = kind === 'bang' ? 900 : 2200;
+    const g = actx.createGain(); g.gain.value = kind === 'bang' ? 0.7 : 0.12;
+    src.connect(f); f.connect(g); g.connect(actx.destination); src.start();
+  } catch (e) {}
+}
+
+// ═════════════════════════════ GLOBAL STATE ═════════════════════════════
+const cv = document.getElementById('c'), c = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1, U = 0, CX = 0, CY = 0;
+let screen = 'menu';        // menu | connecting | lobby | table
+let G = null;               // latest server state
+let ws = null;
+const conn = { code: null, name: null, intentional: false, fatal: false, tries: 0, gotState: false, everState: false, reconnecting: false, timer: null };
+let toast = null, banner = null;
+let showHow = false, howScroll = 0;
+let privQueue = [];
+let lastSeq = 0, lastRot = 0;
+let aimT = -Math.PI / 2, aimD = -Math.PI / 2;
+let fire = null;
+let fx = { flash: 0, shake: 0 };
+let act = { mode: 'bar', kind: null, sel: [] };
+let sending = false;
+let soloPending = false;   // 'Play vs CPU': fill the room with CPUs as soon as we're in the lobby
+let hoverCh = -1;
+const ui = { buttons: [], mx: -1, my: -1, blocked: false, cursor: 'default', down: null };
+const chatData = { left: [], right: [] };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const now = () => performance.now();
+
+// ═════════════════════════════ NETWORK ═════════════════════════════
+function sendMsg(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+function showToast(t) { toast = { text: t, until: now() + 4500 }; }
+
+function connectRoom(code, name) {
+  conn.code = code; conn.name = name; conn.intentional = false; conn.fatal = false; conn.tries = 0;
+  conn.gotState = false; conn.everState = false; conn.reconnecting = false;
+  savedRoom = code; lsSet('room', code); lsSet('name', name); savedName = name;
+  screen = 'connecting'; openSocket();
+}
+function openSocket() {
+  clearTimeout(conn.timer);
+  if (ws) { try { ws.onclose = null; ws.close(); } catch (e) {} }
+  let sock;
+  try { sock = new WebSocket(WS_URL + '/room/' + conn.code); } catch (e) { return handleClose(); }
+  ws = sock;
+  sock.onopen = () => sendMsg({ t: 'hello', name: conn.name, token });
+  sock.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; } onMessage(m); };
+  sock.onclose = () => { if (ws === sock) handleClose(); };
+  sock.onerror = () => {};
+}
+function handleClose() {
+  if (conn.intentional || conn.fatal) return;
+  if (!conn.everState) {
+    conn.tries++;
+    if (conn.tries > 3) { toMenu("Can't reach the server. Check your connection and try again."); return; }
+  }
+  conn.reconnecting = true; conn.gotState = false;
+  const delay = Math.min(8000, 700 * Math.pow(2, Math.min(conn.tries, 4)));
+  conn.tries++;
+  conn.timer = setTimeout(openSocket, delay);
+}
+function toMenu(msg) {
+  conn.intentional = true; clearTimeout(conn.timer);
+  if (ws) { try { ws.onclose = null; ws.close(); } catch (e) {} ws = null; }
+  conn.reconnecting = false; G = null; screen = 'menu'; fire = null; privQueue = [];
+  act = { mode: 'bar', kind: null, sel: [] }; chatData.left = []; chatData.right = []; renderChats(true);
+  if (msg) showToast(msg);
+}
+function leaveRoom() { savedRoom = null; lsSet('room', null); toMenu(); }
+
+const FRIENDLY = { no_room: 'That room does not exist.', room_full: 'That room is full.', in_progress: 'That game has already started.',
+  bad_action: 'That move is not allowed.', not_your_turn: 'It is not your turn.', not_host: 'Only the host can do that.' };
+function onMessage(m) {
+  if (m.t === 'state') onState(m);
+  else if (m.t === 'error') {
+    sending = false;
+    showToast(FRIENDLY[m.code] ? (m.msg && m.code.startsWith('bad') ? m.msg : FRIENDLY[m.code]) : (m.msg || 'Something went wrong.'));
+    if (['no_room', 'room_full', 'in_progress'].includes(m.code)) {
+      conn.fatal = true; savedRoom = null; lsSet('room', null);
+      const msg = FRIENDLY[m.code]; toMenu(msg);
+    }
+  } else if (m.t === 'chat') {
+    const side = m.side === 'left' ? 'left' : 'right';
+    chatData[side].push({ mine: !!m.mine, text: String(m.text) });
+    if (!m.mine) markUnread(side);
+    renderChats();
+  } else if (m.t === 'chatHistory') {
+    chatData.left = (m.left || []).map(x => ({ mine: !!x.mine, text: String(x.text) }));
+    chatData.right = (m.right || []).map(x => ({ mine: !!x.mine, text: String(x.text) }));
+    renderChats(true);
+  }
+}
+
+// ═════════════════════════════ STATE HANDLING ═════════════════════════════
+const nm = s => ((G && G.players && G.players[s] && G.players[s].name) || ('PLAYER ' + (s + 1))).toUpperCase();
+const chs = (a, b) => LET[a] + ' AND ' + LET[b];
+function findings(chambers, results) {
+  const b = chambers.filter((_, i) => results[i]).map(i => LET[i]), e = chambers.filter((_, i) => !results[i]).map(i => LET[i]);
+  const parts = [];
+  if (b.length) parts.push((b.length > 1 ? 'BULLETS IN ' : 'BULLET IN ') + b.join(' AND '));
+  if (e.length) parts.push('NONE IN ' + e.join(' AND '));
+  return parts.join(', ');
+}
+function fmtEvent(e, full) {
+  const n = nm(e.seat);
+  if (e.kind === 'open') return n + ' CHECKED ' + chs(e.chambers[0], e.chambers[1]) + ': ' + findings(e.chambers, e.results);
+  if (e.kind === 'rotate') return n + ' ROTATED THE GUN ' + e.n;
+  if (full && e.detail) {
+    const d = e.detail;
+    if (d.type === 'investigate') return n + ' LOOKED AT ' + chs(d.chambers[0], d.chambers[1]) + ': ' + findings(d.chambers, d.results);
+    if (d.type === 'manipulate') return n + ' PUT ' + d.amount + ' IN THE BANK: ' + (d.success ? 'FULL, SWAPPED ' + chs(d.swap[0], d.swap[1]) : 'NOT ENOUGH');
+    if (d.type === 'pass') return n + ' PASSED';
+  }
+  return n + ' DID A PRIVATE ACTION';
+}
+function evCost(e) {
+  if (e.kind === 'open') return 1;
+  if (e.kind === 'rotate') return e.n + 2;
+  const d = e.detail; if (!d) return null;
+  return d.type === 'investigate' ? 2 : d.type === 'manipulate' ? d.amount : 0;
+}
+function privModal(d) {
+  const rows = [];
+  if (d.type === 'investigate') {
+    rows.push({ t: 'YOU LOOKED AT ' + chs(d.chambers[0], d.chambers[1]) });
+    d.chambers.forEach((ch, i) => rows.push({ t: 'CHAMBER ' + LET[ch] + ': ' + (d.results[i] ? 'BULLET' : 'EMPTY'), col: d.results[i] ? COL.scarlet : COL.teal, big: true }));
+  } else if (d.type === 'manipulate' && d.success) {
+    rows.push({ t: 'YOU PAID ' + d.amount + ' CREDIT' + (d.amount > 1 ? 'S' : '') + '. THAT WAS ENOUGH.' });
+    rows.push({ t: 'YOU SWAPPED CHAMBERS ' + chs(d.swap[0], d.swap[1]) + '.', col: COL.rose, big: true });
+  } else if (d.type === 'manipulate') {
+    rows.push({ t: 'YOU PAID ' + d.amount + ' CREDIT' + (d.amount > 1 ? 'S' : '') + ' INTO THE BANK.' });
+    rows.push({ t: 'NOT ENOUGH CREDITS IN THE BANK.', col: COL.rose, big: true });
+  } else return null;
+  return { title: 'Your Result', rows };
+}
+function announce(e) {
+  banner = { text: fmtEvent(e, false), t0: now(), dur: 5000 };
+  if (e.kind === 'open') sfx('arcade2', 0.4);
+  if (G.you && e.seat === G.you.index && e.detail) {
+    const pm = privModal(e.detail);
+    if (pm) { privQueue.push(pm); if (e.detail.type === 'investigate') sfx('arcade2', 0.4); }
+  }
+}
+function onState(m) {
+  const prev = G; sending = false;
+  conn.gotState = true; conn.everState = true; conn.reconnecting = false; conn.tries = 0;
+  G = m;
+  if (m.phase === 'lobby') {
+    screen = 'lobby'; lastSeq = 0; fire = null; privQueue = []; showHow = false;
+    if (soloPending && m.you.isHost) { soloPending = false; sendMsg({ t: 'cpu', op: 'fill' }); }
+  }
+  else screen = 'table';
+  if (prev && prev.phase !== m.phase && m.phase === 'playing') {
+    lastSeq = 0; fire = null; privQueue = [];
+    chatData.left = []; chatData.right = []; renderChats(true);
+    aimT = aimD = -Math.PI / 2; lastRot = 0; act = { mode: 'bar', kind: null, sel: [] }; banner = null;
+  }
+  if (m.phase !== 'lobby') {
+    const evs = (m.events || []).slice().sort((a, b) => a.seq - b.seq);
+    const mx = evs.reduce((a, e) => Math.max(a, e.seq), 0);
+    if (mx < lastSeq) lastSeq = 0;
+    if (!prev) { lastSeq = mx; }
+    else { for (const e of evs) if (e.seq > lastSeq) announce(e); lastSeq = Math.max(lastSeq, mx); }
+    // rotation animation
+    if (!prev) { aimT = aimD = -Math.PI / 2 + m.rotation * Math.PI / 3; lastRot = m.rotation; }
+    else if (m.rotation !== lastRot && !(fire && !fire.done)) { aimT += ((m.rotation - lastRot + 6) % 6) * Math.PI / 3; lastRot = m.rotation; }
+    lastRot = m.rotation;
+    // game over
+    if (m.phase === 'over' && (!prev || prev.phase !== 'over')) {
+      if (prev && prev.phase === 'playing' && m.result) {
+        fire = { t: 0, aimed: [], shot: [], done: false, cur: m.result.rotation, fired: [], hit: new Set() };
+        lastRot = m.result.rotation;
+      } else { fire = null; }
+      setLogCollapsed(W < 640);   // open the full log, except on phones where it would cover the table
+    }
+  }
+  if (m.phase === 'playing' && !m.pendingSwap && m.turnSeat !== m.you.index) act = { mode: 'bar', kind: null, sel: [] };
+  renderChats(); refreshChatTitles();
+}
+
+// ═════════════════════════════ LAYOUT ═════════════════════════════
+const Ly = {};
+function barCount() {
+  if (!G || G.phase !== 'playing') return 0;
+  return 5;
+}
+function computeLayout() {
+  U = Math.min(W, H);
+  const fs = clamp(U * 0.034, 11, 22); Ly.fs = fs;
+  Ly.compact = W < 900 || H > W * 0.85;
+  Ly.twoRow = W < 640;
+  const hb = fs * 2.9;
+  Ly.turnFs = Ly.twoRow ? fs * 1.4 : clamp(U * 0.05, 16, 40);
+  Ly.turnY = Ly.twoRow ? hb + fs * 0.7 : hb * 0.5;
+  Ly.bannerH = fs * 2.2;
+  Ly.bannerY = (Ly.twoRow ? hb + fs * 1.5 : hb) + 2;
+  const top0 = Ly.bannerY + Ly.bannerH + 6;
+  Ly.bh = clamp(U * 0.085, 36, 56); Ly.gap = Math.max(6, Ly.bh * 0.15);
+  Ly.promptH = fs * 2.3;
+  Ly.barBottom = H - (Ly.compact ? 40 : 14);
+  const rowsMax = Ly.compact ? 2 : 1;
+  Ly.barTop = Ly.barBottom - (rowsMax * Ly.bh + (rowsMax - 1) * Ly.gap) - Ly.promptH;
+  Ly.top0 = top0; Ly.bottom0 = Ly.barTop - 4;
+  Ly.ph = clamp(U * 0.1, 40, 70); Ly.pw = clamp(U * 0.22, 84, 160);
+  // Game over with the full log open: move the table right so the log doesn't cover the left seats.
+  const left = overLogShown() && !Ly.twoRow && !document.getElementById('logWin').classList.contains('collapsed') ? overLogW() + 16 : 0;
+  const halfW = (W - left) / 2;
+  const calcRr = () => Math.max(30, Math.min((Ly.bottom0 - top0) / 2 - Ly.ph / 2, (halfW - Ly.pw / 2 - 6) / 0.866));
+  Ly.Rr = calcRr();
+  for (let k = 0; k < 8 && Ly.Rr < 1.7 * Ly.ph && Ly.ph > 22; k++) { Ly.ph *= 0.88; Ly.pw *= 0.88; Ly.Rr = calcRr(); }
+  Ly.R = Math.max(30, Ly.Rr - Ly.ph * 0.62);
+  CX = W / 2; Ly.cx = left + halfW; Ly.cy = (top0 + Ly.bottom0) / 2; CY = H / 2;
+}
+const seatPos = i => { const a = -Math.PI / 2 + i * Math.PI / 3; return { x: Ly.cx + Ly.Rr * Math.cos(a), y: Ly.cy + Ly.Rr * Math.sin(a) }; };
+
+// ═════════════════════════════ CANVAS HELPERS ═════════════════════════════
+function roundRect(c, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  c.beginPath(); c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.quadraticCurveTo(x + w, y, x + w, y + r);
+  c.lineTo(x + w, y + h - r); c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  c.lineTo(x + r, y + h); c.quadraticCurveTo(x, y + h, x, y + h - r);
+  c.lineTo(x, y + r); c.quadraticCurveTo(x, y, x + r, y); c.closePath();
+}
+const FONT = (s, w) => (w || 400) + ' ' + Math.max(5, Math.round(s)) + "px 'Oswald', 'Arial Narrow', sans-serif";
+const TITLE = s => "bold " + Math.round(s) + "px 'Allura', cursive";
+function txt(s, x, y, size, col, align, weight, base) {
+  c.font = FONT(size, weight); c.fillStyle = col; c.textAlign = align || 'center'; c.textBaseline = base || 'middle';
+  try { c.letterSpacing = (size * 0.06).toFixed(1) + 'px'; } catch (e) {}
+  c.fillText(s, x, y);
+}
+function fitSize(s, maxW, size, minSize, weight) {
+  c.font = FONT(size, weight); try { c.letterSpacing = (size * 0.06).toFixed(1) + 'px'; } catch (e) {}
+  const w = c.measureText(s).width;
+  return w <= maxW ? size : Math.max(minSize, size * maxW / w);
+}
+function fitTxt(s, x, y, maxW, size, col, align, weight, minSize) {
+  txt(s, x, y, fitSize(s, maxW, size, minSize || 8, weight), col, align, weight);
+}
+function wrapLines(s, maxW, size, weight) {
+  c.font = FONT(size, weight); try { c.letterSpacing = (size * 0.06).toFixed(1) + 'px'; } catch (e) {}
+  const words = s.split(' '), out = []; let line = '';
+  for (const w of words) {
+    const t = line ? line + ' ' + w : w;
+    if (c.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t;
+  }
+  if (line) out.push(line); return out;
+}
+function inRect(px, py, x, y, w, h) { return px >= x && px <= x + w && py >= y && py <= y + h; }
+
+// Button: draws, registers a click target (unless a modal blocks the base layer).
+function btn(id, x, y, w, h, label, o) {
+  o = o || {};
+  const hue = HUES[o.hue || 'grey'], interactive = !ui.blocked || o.modal;
+  const hov = interactive && !o.disabled && inRect(ui.mx, ui.my, x, y, w, h);
+  if (interactive) ui.buttons.push({ id, x, y, w, h, disabled: !!o.disabled, click: o.click, sound: o.sound !== false });
+  if (hov) ui.cursor = 'pointer';
+  const rad = hue.lw === 1 ? 4 : Math.min(H * 0.026, h * 0.3);
+  roundRect(c, x, y, w, h, rad);
+  c.fillStyle = o.disabled ? '#141012' : (hov ? hue.hov : hue.fill); c.fill();
+  c.lineWidth = hue.lw; c.strokeStyle = o.disabled ? '#3A3236' : hue.col; c.stroke();
+  const tc = o.disabled ? '#5A5258' : (hue.text || hue.col);
+  const fsz = o.fs || Math.min(h * 0.42, w * 0.2);
+  if (o.sub) {
+    fitTxt(label, x + w / 2, y + h * 0.36, w - 10, fsz, tc, 'center', 500);
+    fitTxt(o.sub, x + w / 2, y + h * 0.72, w - 10, fsz * 0.62, o.disabled ? '#4A4248' : '#AAB', 'center');
+  } else fitTxt(label, x + w / 2, y + h / 2, w - 12, fsz, tc, 'center', 500);
+}
+
+// ═════════════════════════════ BACKGROUND ═════════════════════════════
+const specks = [];
+function initSpecks() {
+  specks.length = 0; const n = Math.round((W * H) / 25000);
+  for (let i = 0; i < n; i++) specks.push({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8, r: Math.random() * 2.2 + 0.8, a: Math.random() * 0.5 + 0.25 });
+}
+function updateSpecks(dt) {
+  for (const s of specks) {
+    s.x += s.vx * dt; s.y += s.vy * dt;
+    if (s.x < 0) s.x += W; if (s.x > W) s.x -= W; if (s.y < 0) s.y += H; if (s.y > H) s.y -= H;
+  }
+}
+function drawBackground() {
+  const gcx = W / 2, gcy = H / 2;
+  const grd = c.createRadialGradient(gcx, gcy, 50, gcx, gcy, Math.max(W, H) * 0.7);
+  grd.addColorStop(0, COL.bgMid); grd.addColorStop(1, COL.bgDeep);
+  c.fillStyle = grd; c.fillRect(0, 0, W, H);
+  c.save();
+  for (const s of specks) {
+    c.beginPath(); c.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    c.shadowColor = 'rgba(220,215,255,' + (s.a * 0.7) + ')'; c.shadowBlur = s.r * 4;
+    c.fillStyle = 'rgba(230,225,240,' + s.a + ')'; c.fill();
+  }
+  c.restore();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ██ REVOLVER — final artwork; keep the three function signatures  ██
+// ██ below; their signatures and call sites are the fixed interface.        ██
+// ═══════════════════════════════════════════════════════════════════════════
+// aimAngle: radians, the direction the barrel points (seat i is at -PI/2 + i*PI/3). Animated by the caller.
+// R: outer radius available for the whole gun, in pixels.
+// opts: { notes: state.notes or null, selectable: Set of chamber indices or null, selected: array of chamber indices,
+//         hover: chamber index or -1, reveal: array of 6 (true bullet / false empty / null still hidden) or null,
+//         flash: 0..1 muzzle flash strength, t: ms timestamp }
+// ── Revolver artwork ─────────────────────────────────────────────
+// Geometry contract: chamber i sits in direction aimAngle + i*PI/3, so each chamber
+// faces the seat it will fire at and the cylinder turns with the barrel.
+const GUN = {
+  metal: "#34363F", metalHi: "#8E93A3", metalSh: "#17181D", metalMid: "#262830",
+  grip: "#4A2A30", gripHi: "#7A4A52", gripSh: "#241216",
+  gold: "#C9A24A", goldHi: "#E7D08A", goldSh: "#8A6A22",
+  scarlet: "#DC143C", scarletHi: "#FF5A6A", scarletSh: "#7A0A20",
+  empty: "#1A0E12", outline: "#8A8894", teal: "#7AAA9E", accent: "#C0C8D8"
+};
+const GUN_RING = 0.33, GUN_CH = 0.118, GUN_CYL = 0.52;
+
+function chamberPos(cx, cy, R, aimAngle, i) {
+  const a = aimAngle + i * Math.PI / 3;
+  return { x: cx + Math.cos(a) * R * GUN_RING, y: cy + Math.sin(a) * R * GUN_RING, r: R * GUN_CH };
+}
+function chamberAt(cx, cy, R, aimAngle, px, py) {
+  for (let i = 0; i < 6; i++) {
+    const p = chamberPos(cx, cy, R, aimAngle, i);
+    if (Math.hypot(px - p.x, py - p.y) <= p.r * 1.25) return i;
+  }
+  return -1;
+}
+
+function drawRevolver(c, cx, cy, R, aimAngle, opts) {
+  opts = opts || {};
+  const notes = opts.notes || null, reveal = opts.reveal || null;
+  const selectable = opts.selectable || null, selected = opts.selected || [];
+  const hover = opts.hover == null ? -1 : opts.hover, flash = opts.flash || 0, t = opts.t || 0;
+  const lw = Math.max(1, R * 0.012);
+
+  // Beveled polygon in the gun's rotated frame: fill, then light top edges and dark bottom edges.
+  const bevel = (pts, base, hi, sh) => {
+    c.save();
+    c.beginPath(); pts.forEach((p, k) => k ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.closePath();
+    c.fillStyle = base; c.fill(); c.clip();
+    for (let k = 0; k < pts.length; k++) {
+      const a = pts[k], b = pts[(k + 1) % pts.length];
+      // edge normal in screen space decides light or shadow (light from top-left)
+      const ex = b[0] - a[0], ey = b[1] - a[1];
+      const nx = ey, ny = -ex; // outward for clockwise winding
+      const sx = nx * Math.cos(aimAngle) - ny * Math.sin(aimAngle), sy = nx * Math.sin(aimAngle) + ny * Math.cos(aimAngle);
+      const lit = (-sx - sy) > 0;
+      c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]);
+      c.strokeStyle = lit ? hi : sh; c.lineWidth = R * (lit ? 0.03 : 0.026); c.stroke();
+    }
+    c.restore();
+  };
+
+  c.save();
+  c.translate(cx, cy); c.rotate(aimAngle);
+
+  // soft shadow under the whole gun
+  c.save();
+  c.shadowColor = "rgba(0,0,0,0.55)"; c.shadowBlur = R * 0.12; c.shadowOffsetY = R * 0.03;
+
+  // grip (behind the cylinder, tapering, slightly flared at the butt)
+  bevel([[-0.46 * R, -0.13 * R], [-0.82 * R, -0.18 * R], [-0.90 * R, -0.12 * R], [-0.90 * R, 0.12 * R], [-0.82 * R, 0.18 * R], [-0.46 * R, 0.13 * R]],
+        GUN.grip, GUN.gripHi, GUN.gripSh);
+  // barrel
+  bevel([[0.44 * R, -0.13 * R], [0.86 * R, -0.11 * R], [0.91 * R, -0.065 * R], [0.91 * R, 0.065 * R], [0.86 * R, 0.11 * R], [0.44 * R, 0.13 * R]],
+        GUN.metal, GUN.metalHi, GUN.metalSh);
+  // frame bridge + hammer block
+  bevel([[-0.62 * R, -0.16 * R], [-0.44 * R, -0.20 * R], [-0.44 * R, 0.20 * R], [-0.62 * R, 0.16 * R]], GUN.metalMid, GUN.metalHi, GUN.metalSh);
+  c.restore();
+
+  // grip rivets
+  c.fillStyle = GUN.gold;
+  for (const x of [-0.70, -0.82]) { c.beginPath(); c.arc(x * R, 0, R * 0.018, 0, Math.PI * 2); c.fill(); }
+  // gold inlay line along the barrel + muzzle band
+  c.strokeStyle = GUN.gold; c.lineWidth = lw * 1.6;
+  c.beginPath(); c.moveTo(0.56 * R, 0); c.lineTo(0.78 * R, 0); c.stroke();
+  c.fillStyle = GUN.gold; c.fillRect(0.80 * R, -0.115 * R, 0.03 * R, 0.23 * R);
+  // scarlet front sight: an arrowhead past the muzzle so the aim reads at a glance
+  c.beginPath(); c.moveTo(1.06 * R, 0); c.lineTo(0.94 * R, -0.09 * R); c.lineTo(0.94 * R, 0.09 * R); c.closePath();
+  c.fillStyle = GUN.scarlet; c.shadowColor = GUN.scarlet; c.shadowBlur = R * 0.06; c.fill(); c.shadowBlur = 0;
+
+  // muzzle flash
+  if (flash > 0) {
+    const fr = R * (0.18 + 0.30 * flash);
+    const g = c.createRadialGradient(1.02 * R, 0, 0, 1.02 * R, 0, fr);
+    g.addColorStop(0, `rgba(255,244,214,${0.95 * flash})`);
+    g.addColorStop(0.35, `rgba(231,208,138,${0.7 * flash})`);
+    g.addColorStop(1, "rgba(220,20,60,0)");
+    c.fillStyle = g; c.beginPath(); c.arc(1.0 * R, 0, fr, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = `rgba(255,236,190,${flash})`; c.lineWidth = lw * 2;
+    for (let k = -2; k <= 2; k++) {
+      const a = k * 0.32; c.beginPath(); c.moveTo(1.0 * R, 0);
+      c.lineTo(1.0 * R + Math.cos(a) * fr * (k % 2 ? 0.8 : 1.15), Math.sin(a) * fr * (k % 2 ? 0.8 : 1.15)); c.stroke();
+    }
+  }
+  c.restore();
+
+  // ── cylinder (drawn in screen space so the light stays top-left) ──
+  const cr = R * GUN_CYL;
+  c.save();
+  c.shadowColor = "rgba(0,0,0,0.6)"; c.shadowBlur = R * 0.10; c.shadowOffsetY = R * 0.02;
+  c.beginPath(); c.arc(cx, cy, cr, 0, Math.PI * 2);
+  const cg = c.createRadialGradient(cx - cr * 0.3, cy - cr * 0.35, cr * 0.1, cx, cy, cr);
+  cg.addColorStop(0, "#474A56"); cg.addColorStop(1, GUN.metalMid);
+  c.fillStyle = cg; c.fill();
+  c.restore();
+  // bevel rim: bright arc top-left, dark arc bottom-right
+  c.lineWidth = lw * 3.2;
+  c.beginPath(); c.arc(cx, cy, cr - lw * 1.6, Math.PI * 0.85, Math.PI * 1.65); c.strokeStyle = GUN.metalHi; c.stroke();
+  c.beginPath(); c.arc(cx, cy, cr - lw * 1.6, -Math.PI * 0.15, Math.PI * 0.65); c.strokeStyle = GUN.metalSh; c.stroke();
+  // flutes between chambers
+  for (let i = 0; i < 6; i++) {
+    const a = aimAngle + (i + 0.5) * Math.PI / 3;
+    c.beginPath(); c.arc(cx + Math.cos(a) * cr * 1.02, cy + Math.sin(a) * cr * 1.02, cr * 0.13, 0, Math.PI * 2);
+    c.fillStyle = "#1B1216"; c.fill();
+  }
+  // gold hub
+  c.beginPath(); c.arc(cx, cy, R * 0.095, 0, Math.PI * 2); c.fillStyle = GUN.goldSh; c.fill();
+  c.beginPath(); c.arc(cx, cy, R * 0.07, 0, Math.PI * 2); c.fillStyle = GUN.gold; c.fill();
+  c.beginPath(); c.arc(cx - R * 0.018, cy - R * 0.018, R * 0.03, 0, Math.PI * 2); c.fillStyle = GUN.goldHi; c.fill();
+
+  // chambers
+  for (let i = 0; i < 6; i++) {
+    const p = chamberPos(cx, cy, R, aimAngle, i);
+    const known = reveal ? reveal[i] : (notes && notes[i] ? notes[i].bullet : null);
+    const isSel = selected.indexOf(i) >= 0, isHover = hover === i;
+    const dim = selectable && !selectable.has(i) && !isSel;
+    c.save();
+    c.globalAlpha = dim ? 0.35 : 1;
+    // bore
+    c.beginPath(); c.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    c.fillStyle = isHover && !dim ? "#2A1A20" : GUN.empty; c.fill();
+    // inner shadow at top-left gives the hole depth
+    c.save(); c.clip();
+    c.beginPath(); c.arc(p.x + p.r * 0.22, p.y + p.r * 0.22, p.r, 0, Math.PI * 2);
+    c.lineWidth = p.r * 0.35; c.strokeStyle = "rgba(0,0,0,0.55)"; c.stroke();
+    c.restore();
+    if (known === true) {
+      // cartridge: brass rim, scarlet primer
+      c.beginPath(); c.arc(p.x, p.y, p.r * 0.86, 0, Math.PI * 2); c.fillStyle = GUN.gold; c.fill();
+      c.beginPath(); c.arc(p.x, p.y, p.r * 0.86, Math.PI * 0.85, Math.PI * 1.65); c.lineWidth = p.r * 0.14; c.strokeStyle = GUN.goldHi; c.stroke();
+      c.beginPath(); c.arc(p.x, p.y, p.r * 0.86, -Math.PI * 0.15, Math.PI * 0.65); c.strokeStyle = GUN.goldSh; c.stroke();
+      c.beginPath(); c.arc(p.x, p.y, p.r * 0.56, 0, Math.PI * 2);
+      c.fillStyle = GUN.scarlet; c.shadowColor = GUN.scarlet; c.shadowBlur = p.r * 0.8; c.fill(); c.shadowBlur = 0;
+    }
+    // ring
+    c.beginPath(); c.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    if (known === false) { c.strokeStyle = GUN.teal; c.lineWidth = lw * 2; }
+    else if (known === true) { c.strokeStyle = GUN.goldSh; c.lineWidth = lw; }
+    else { c.strokeStyle = GUN.outline; c.lineWidth = lw; }
+    c.stroke();
+    // letter, upright
+    c.font = `500 ${Math.max(7, p.r * 0.95) | 0}px 'Oswald', sans-serif`;
+    c.textAlign = "center"; c.textBaseline = "middle";
+    c.fillStyle = known === true ? "#FFF" : known === false ? GUN.teal : "#AAB";
+    c.fillText("ABCDEF"[i], p.x, p.y + p.r * 0.06);
+    c.restore();
+    if (isSel || (isHover && selectable && selectable.has(i))) {
+      c.save();
+      c.beginPath(); c.arc(p.x, p.y, p.r * 1.16, 0, Math.PI * 2);
+      c.strokeStyle = GUN.accent; c.lineWidth = lw * (isSel ? 3 : 1.5);
+      c.shadowColor = GUN.accent; c.shadowBlur = isSel ? 8 + 3 * Math.sin(t / 300) : 4; c.globalAlpha = isSel ? 1 : 0.7; c.stroke();
+      c.restore();
+    }
+  }
+}
+
+// ═════════════════════════ end of REVOLVER block ═════════════════════════
+
+// ═════════════════════════════ ACTIONS ═════════════════════════════
+function myTurn() { return G && G.phase === 'playing' && G.turnSeat === G.you.index; }
+function pickKind() {
+  if (!myTurn()) return null;
+  if (G.pendingSwap) return 'swap';
+  return act.mode === 'pick' ? act.kind : null;
+}
+function selectableSet(kind) {
+  const all = new Set([0, 1, 2, 3, 4, 5]);
+  if (kind === 'open') return all;
+  if (act.sel.length === 0) return all;
+  const f = act.sel[0]; return new Set([f, (f + 1) % 6, (f + 5) % 6]);
+}
+function clickChamber(i) {
+  const kind = pickKind(); if (!kind || sending) return;
+  const set = selectableSet(kind); if (!set.has(i)) return;
+  const sel = act.sel, at = sel.indexOf(i);
+  if (kind === 'open') { if (at >= 0) sel.splice(at, 1); else { if (sel.length >= 2) sel.shift(); sel.push(i); } }
+  else {
+    if (at === 0) sel.shift();
+    else if (at === 1) sel.pop();
+    else if (sel.length === 0) sel.push(i);
+    else { sel.length = 1; sel.push(i); }
+  }
+}
+function doAction(o) { if (sending) return; sending = true; sendMsg(Object.assign({ t: 'action' }, o)); act = { mode: 'bar', kind: null, sel: [] }; }
+function confirmPick() { const k = pickKind(); if (!k || act.sel.length !== 2) return; doAction({ a: k, chambers: act.sel.slice() }); }
+
+// ═════════════════════════════ SCREENS ═════════════════════════════
+const inName = document.getElementById('inName'), inCode = document.getElementById('inCode');
+function place(el, x, y, w, h, fs) {
+  const k = [x, y, w, h, fs].map(v => Math.round(v)).join();
+  if (el._k !== k) { el._k = k; const s = el.style; s.left = x + 'px'; s.top = y + 'px'; s.width = w + 'px'; s.height = h + 'px'; s.fontSize = fs + 'px'; }
+}
+function show(el, v, disp) { const d = v ? (disp || 'block') : 'none'; if (el.style.display !== d) el.style.display = d; }
+inName.value = savedName; inName.addEventListener('input', () => { inName.value = inName.value.slice(0, 12); });
+inCode.addEventListener('input', () => { inCode.value = inCode.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4); });
+inName.addEventListener('keydown', e => { if (e.key === 'Enter') inCode.focus(); });
+inCode.addEventListener('keydown', e => { if (e.key === 'Enter') doJoin(); });
+
+function needName() { const n = inName.value.trim(); if (!n) { showToast('Enter your name first.'); inName.focus(); return null; } return n; }
+function doCreate() {
+  const n = needName(); if (!n) return;
+  screen = 'connecting'; conn.code = null; showToast('Creating room...');
+  fetch(SERVER_URL + '/create', { method: 'POST' }).then(r => r.json()).then(j => {
+    if (!j.code) throw new Error('bad'); toast = null; connectRoom(j.code, n);
+  }).catch(() => { screen = 'menu'; soloPending = false; showToast("Couldn't create a room. Is the server reachable?"); });
+}
+function doSolo() { const n = needName(); if (!n) return; soloPending = true; doCreate(); }
+function doJoin() {
+  const n = needName(); if (!n) return;
+  const code = inCode.value.trim().toUpperCase(); if (code.length !== 4) { showToast('Enter the 4-letter room code.'); inCode.focus(); return; }
+  connectRoom(code, n);
+}
+function doRejoin() { const n = inName.value.trim() || savedName || 'Player'; connectRoom(savedRoom, n); }
+
+function drawMenu() {
+  const t = now();
+  const titleSize = Math.min(H * 0.16, W * 0.15);
+  c.save(); c.shadowColor = 'rgba(220,20,60,0.45)'; c.shadowBlur = titleSize * 0.2;
+  c.font = TITLE(titleSize); c.fillStyle = COL.scarlet; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('Russian Roulette', W / 2, H * 0.15); c.restore();
+  const hasRejoin = !!savedRoom, n = hasRejoin ? 7 : 6;
+  let bh = clamp(H * 0.075, 36, 60); bh = Math.min(bh, (H * 0.66) / (n * 1.28));
+  const gap = bh * 0.28, bw = Math.min(W * 0.86, Math.max(220, H * 0.62));
+  let y = Math.max(H * 0.28, titleSize * 0.5 + H * 0.15);
+  if (y + n * (bh + gap) > H - 6) y = H - 6 - n * (bh + gap);
+  const x = (W - bw) / 2; let row = 0;
+  const fsz = bh * 0.42;
+  if (hasRejoin) { btn('rejoin', x, y + row * (bh + gap), bw, bh, 'REJOIN ROOM ' + savedRoom, { hue: 'amber', click: doRejoin, fs: fsz }); row++; }
+  const iy = y + row * (bh + gap); place(inName, x, iy, bw, bh, fsz); row++;
+  btn('solo', x, y + row * (bh + gap), bw, bh, 'PLAY VS CPU', { hue: 'amber', click: doSolo, fs: fsz }); row++;
+  btn('create', x, y + row * (bh + gap), bw, bh, 'CREATE ROOM', { hue: 'rose', click: doCreate, fs: fsz }); row++;
+  const cy2 = y + row * (bh + gap); place(inCode, x, cy2, bw, bh, fsz); row++;
+  btn('join', x, y + row * (bh + gap), bw, bh, 'JOIN ROOM', { hue: 'teal', click: doJoin, fs: fsz }); row++;
+  btn('how', x, y + row * (bh + gap), bw, bh, 'HOW TO PLAY', { hue: 'lav', click: () => { showHow = true; howScroll = 0; }, fs: fsz }); row++;
+}
+
+function drawConnecting() {
+  txt(conn.reconnecting ? 'RECONNECTING...' : 'CONNECTING...', W / 2, H * 0.45, clamp(U * 0.05, 16, 36), COL.accent, 'center', 500);
+  const bw = Math.min(W * 0.6, 240), bh = clamp(H * 0.07, 36, 52);
+  btn('cancel', (W - bw) / 2, H * 0.55, bw, bh, 'CANCEL', { hue: 'grey', sound: false, click: () => leaveRoom() });
+}
+
+function panel(x, y, w, h) {
+  roundRect(c, x, y, w, h, 12); c.fillStyle = 'rgba(36,20,26,0.95)'; c.fill(); c.lineWidth = 2; c.strokeStyle = COL.goldBase; c.stroke();
+}
+function drawLobby() {
+  const t = now(), isHost = G.you.isHost;
+  const wide = W > H * 1.1;
+  const fs = clamp(Math.min(U * 0.04, H / (wide ? 26 : 40)), 10, 22);
+  txt('ROOM CODE', W / 2, H * 0.04, fs * 0.8, '#AAB', 'center');
+  const codeSize = Math.min(H * (wide ? 0.15 : 0.11), W * 0.22);
+  c.save(); c.shadowColor = 'rgba(231,208,138,0.35)'; c.shadowBlur = codeSize * 0.2;
+  txt(G.code, W / 2, H * 0.04 + fs * 0.8 + codeSize * 0.55, codeSize, COL.goldHi, 'center', 500); c.restore();
+  const rowH = fs * (wide ? 1.7 : 1.45), pw = wide ? Math.min(W * 0.42, 400) : Math.min(W * 0.9, 420);
+  const playersH = fs * 2.4 + 6 * rowH + fs * 0.6, optsH = fs * 2.4 + 2 * rowH * 1.25 + fs * 0.6;
+  const top = H * 0.04 + fs * 0.8 + codeSize * 1.15 + fs * 0.6;
+  let px, py, ox, oy;
+  if (wide) { px = W / 2 - pw - 10; ox = W / 2 + 10; py = oy = top; }
+  else { px = ox = (W - pw) / 2; py = top; oy = py + playersH + 10; }
+  // players
+  panel(px, py, pw, playersH);
+  txt('PLAYERS  ' + G.players.length + ' / 6', px + 16, py + fs * 1.3, fs, COL.scarlet, 'left', 500);
+  for (let i = 0; i < 6; i++) {
+    const p = G.players[i], ry = py + fs * 2.4 + i * rowH + rowH / 2;
+    if (p) {
+      const me = i === G.you.index;
+      txt(String(i + 1), px + 16, ry, fs * 0.9, '#778', 'left');
+      fitTxt(p.name.toUpperCase(), px + 40, ry, pw - 40 - 80, fs, me ? COL.goldHi : COL.white, 'left', 500);
+      if (p.isHost) txt('HOST', px + pw - 16, ry, fs * 0.8, COL.goldBase, 'right');
+      else if (me) txt('YOU', px + pw - 16, ry, fs * 0.8, COL.goldHi, 'right');
+      else if (p.cpu) {
+        if (isHost) {
+          const xb = rowH * 0.8;
+          btn('cpux' + i, px + pw - 16 - xb, ry - xb / 2, xb, xb, 'X', { hue: 'grey', sound: false, fs: xb * 0.5, click: () => sendMsg({ t: 'cpu', op: 'remove', index: i }) });
+          txt('CPU', px + pw - 24 - xb, ry, fs * 0.8, '#AAB', 'right');
+        } else txt('CPU', px + pw - 16, ry, fs * 0.8, '#AAB', 'right');
+      }
+    } else { txt(String(i + 1), px + 16, ry, fs * 0.9, '#443', 'left'); txt('-', px + 40, ry, fs, '#443', 'left'); }
+  }
+  // options
+  panel(ox, oy, pw, optsH);
+  txt('OPTIONS' + (isHost ? '' : '  (HOST CHOOSES)'), ox + 16, oy + fs * 1.3, fs, COL.scarlet, 'left', 500);
+  const r1 = oy + fs * 2.4 + rowH * 0.6, r2 = r1 + rowH * 1.25;
+  txt('STARTING CREDITS', ox + 16, r1, fs * 0.95, '#CFCFCF', 'left');
+  txt('PUBLIC LOG', ox + 16, r2, fs * 0.95, '#CFCFCF', 'left');
+  const bs = rowH * 1.05;
+  if (isHost) {
+    const rx = ox + pw - 16;
+    const setCred = v => { v = clamp(Math.round(v), 14, 36); if (!isFinite(v)) return; G.options.credits = v; sendMsg({ t: 'options', credits: v, log: G.options.log }); };
+    btn('cplus', rx - bs, r1 - bs / 2, bs, bs, '+', { hue: 'teal', sound: false, fs: bs * 0.6, click: () => setCred(G.options.credits + 1) });
+    // the number itself is a button: click to type any amount from 14 to 36
+    btn('cnum', rx - bs - fs * 2.6, r1 - bs / 2, fs * 2.4, bs, String(G.options.credits), { hue: 'grey', sound: false, fs: fs * 1.1, click: () => { const v = window.prompt('Starting credits (14 to 36)', String(G.options.credits)); if (v != null && v.trim() !== '') setCred(parseInt(v, 10)); } });
+    btn('cminus', rx - bs - fs * 2.8 - bs, r1 - bs / 2, bs, bs, '-', { hue: 'teal', sound: false, fs: bs * 0.6, click: () => setCred(G.options.credits - 1) });
+    const lw = bs * 2.4;
+    btn('logtog', rx - lw, r2 - bs / 2, lw, bs, G.options.log ? 'ON' : 'OFF', { hue: G.options.log ? 'teal' : 'grey', sound: false, fs: bs * 0.5, click: () => { G.options.log = !G.options.log; sendMsg({ t: 'options', credits: G.options.credits, log: G.options.log }); } });
+  } else {
+    txt(String(G.options.credits), ox + pw - 16, r1, fs * 1.2, COL.white, 'right', 500);
+    txt(G.options.log ? 'ON' : 'OFF', ox + pw - 16, r2, fs * 1.1, G.options.log ? COL.teal : '#999', 'right', 500);
+  }
+  // waiting + leave
+  const by = wide ? top + Math.max(playersH, optsH) + fs * 1.6 : oy + optsH + fs * 1.6;
+  c.globalAlpha = 0.6 + 0.4 * Math.sin(t / 400);
+  txt('WAITING FOR PLAYERS...  ' + G.players.length + ' / 6', W / 2, by, fs * 1.05, COL.accent, 'center'); c.globalAlpha = 1;
+  const bw = Math.min(W * 0.5, 200), bh = clamp(H * 0.065, 34, 48);
+  let ly = by + fs * 1.2;
+  if (isHost && G.players.length < 6) {
+    const cw = Math.min((W - 24) / 2, 220), g2 = 8, left = (W - (cw * 2 + g2)) / 2;
+    ly = Math.min(ly, H - 2 * bh - 16);
+    btn('cpuadd', left, ly, cw, bh, 'ADD CPU', { hue: 'lav', click: () => sendMsg({ t: 'cpu', op: 'add' }) });
+    btn('cpufill', left + cw + g2, ly, cw, bh, 'FILL WITH CPUS', { hue: 'amber', sub: 'AND START', click: () => sendMsg({ t: 'cpu', op: 'fill' }) });
+    ly += bh + 8;
+  }
+  btn('leave', (W - bw) / 2, Math.min(ly, H - bh - 8), bw, bh, 'LEAVE', { hue: 'grey', sound: false, click: leaveRoom });
+}
+
+// ───────────── table ─────────────
+function hitSeats() {
+  if (!G || G.phase !== 'over' || !G.result) return new Set();
+  if (fire && !fire.done) return fire.hit;
+  return new Set(G.result.losers);
+}
+function drawPlaque(i, t) {
+  const p = G.players[i]; if (!p) return;
+  const pos = seatPos(i), me = i === G.you.index, active = G.phase === 'playing' && G.turnSeat === i;
+  const hit = hitSeats().has(i);
+  let { pw, ph } = Ly, x = pos.x - pw / 2, y = pos.y - ph / 2;
+  if (hit && fx.shake > 0) x += Math.sin(t / 25) * fx.shake * 5;
+  c.save();
+  c.globalAlpha = p.connected ? 1 : 0.38;
+  let base, hi, sh, lab;
+  if (hit) { base = '#7A0C22'; hi = '#DC143C'; sh = '#3E0612'; lab = '#F2F2F2'; }
+  else if (me) { base = '#A48030'; hi = '#C4A058'; sh = '#6A4A12'; lab = '#1A1008'; }
+  else { base = '#4A4A54'; hi = '#8E8E9A'; sh = '#2C2C34'; lab = '#F2F2F2'; }
+  roundRect(c, x, y, pw, ph, 6); c.save(); c.clip();
+  c.fillStyle = base; c.fillRect(x, y, pw, ph);
+  c.lineWidth = 5; c.strokeStyle = hi; c.beginPath(); c.moveTo(x, y + ph); c.lineTo(x, y); c.lineTo(x + pw, y); c.stroke();
+  c.lineWidth = 4; c.strokeStyle = sh; c.beginPath(); c.moveTo(x, y + ph); c.lineTo(x + pw, y + ph); c.lineTo(x + pw, y); c.stroke();
+  c.restore();
+  if (active) {
+    const a = 0.45 + 0.55 * Math.abs(Math.sin(t / 800));
+    c.shadowColor = COL.scarlet; c.shadowBlur = 12 * a; roundRect(c, x - 2, y - 2, pw + 4, ph + 4, 8);
+    c.lineWidth = 2.5; c.strokeStyle = 'rgba(220,20,60,' + a + ')'; c.stroke(); c.shadowBlur = 0;
+  }
+  const la = active ? 0.45 + 0.55 * Math.abs(Math.sin(t / 800)) : 1;
+  c.globalAlpha *= 1;
+  c.globalAlpha = (p.connected ? 1 : 0.38) * (active ? Math.max(0.7, la) : 1);
+  const over = G.phase === 'over' && G.result && (!fire || fire.done);
+  const sub = over ? G.result.credits[i] + (G.result.credits[i] === 1 ? ' CREDIT' : ' CREDITS') : (p.cpu ? 'CPU' : null);
+  fitTxt(p.name.toUpperCase(), pos.x, y + ph * (sub ? 0.4 : 0.52), pw - 10, ph * 0.36, lab, 'center', 500, 8);
+  if (sub) {
+    const subCol = over ? (hit ? '#FFD0D8' : me ? '#1A1008' : COL.goldHi) : (me ? '#3A2A10' : '#B8B8C4');
+    fitTxt(sub, pos.x, y + ph * 0.76, pw - 10, ph * 0.22, subCol, 'center', over ? 500 : 400, 7);
+  }
+  if (hit) {
+    c.globalAlpha = 1; txt('HIT', pos.x, y - ph * 0.22, ph * 0.28, COL.scarlet, 'center', 500);
+  }
+  c.restore();
+}
+
+function drawHeader(t) {
+  const fs = Ly.fs;
+  txt('ROUND ' + (G.round || 1), 10, fs * 1.1, fs, '#999', 'left');
+  txt('ROOM ' + G.code, 10, fs * 2.3, fs * 0.9, '#778', 'left');
+  if (G.phase !== 'lobby') txt('CREDITS ' + G.credits, W - 10, fs * 1.1, fs * 1.1, COL.goldHi, 'right', 500);
+  let line = '';
+  if (G.phase === 'over') line = (fire && !fire.done) || !G.result ? 'GAME OVER' : (G.result.losers.includes(G.you.index) ? 'YOU WERE HIT' : 'YOU SURVIVED');
+  else if (G.pendingSwap) line = 'SWAP TWO CHAMBERS';
+  else if (myTurn()) line = 'YOUR TURN';
+  else line = nm(G.turnSeat) + ' TO ACT';
+  fitTxt(line, W / 2, Ly.turnY, Ly.twoRow ? W - 20 : W - 2 * Math.max(160, fs * 12), Ly.turnFs, COL.scarlet, 'center', 500, 12);
+}
+
+function drawBannerSlot(t) {
+  let text = null, col = '#F2F2F2', bcol = COL.scarlet, alpha = 1;
+  if (toast && toast.until > t) { text = toast.text.toUpperCase(); col = COL.denied; bcol = COL.denied; alpha = clamp((toast.until - t) / 500, 0, 1); }
+  else if (banner && t - banner.t0 < banner.dur) { text = banner.text; alpha = clamp((banner.dur - (t - banner.t0)) / 600, 0, 1) * clamp((t - banner.t0) / 120 + 0.3, 0, 1); }
+  if (!text) return;
+  const fs = Ly.fs, w = Math.min(W - 16, Math.max(W * 0.6, 340)), h = Ly.bannerH;
+  const y = screen === 'table' ? Ly.bannerY : H * 0.045, x = (W - w) / 2;
+  c.save(); c.globalAlpha = alpha;
+  roundRect(c, x, y, w, h, 8); c.fillStyle = 'rgba(36,20,26,0.93)'; c.fill(); c.lineWidth = 1.5; c.strokeStyle = bcol; c.stroke();
+  fitTxt(text, W / 2, y + h / 2, w - 16, fs * 1.05, col, 'center', 500, 8);
+  c.restore();
+}
+
+function drawActionBar(t) {
+  const { fs, bh, gap } = Ly;
+  const kind = pickKind();
+  const credits = G.credits;
+  let items = [], prompt = '';
+  if (kind) {
+    const n = act.sel.length;
+    prompt = G.pendingSwap ? 'THE MANIPULATION SUCCEEDED. PICK TWO ADJACENT CHAMBERS TO SWAP.'
+      : kind === 'open' ? 'PICK TWO CHAMBERS TO OPEN (' + n + '/2)' : 'PICK A CHAMBER, THEN ONE NEXT TO IT (' + n + '/2)';
+    const hue = kind === 'open' ? 'teal' : kind === 'private' ? 'lav' : 'rose';
+    items.push({ id: 'confirm', label: kind === 'swap' ? 'CONFIRM SWAP' : 'CONFIRM', hue, disabled: n !== 2 || sending, click: confirmPick });
+    if (!G.pendingSwap) items.push({ id: 'pcancel', label: 'CANCEL', hue: 'grey', sound: false, click: () => { act = { mode: 'bar', kind: null, sel: [] }; } });
+  } else if (act.mode === 'manip') {
+    prompt = 'HOW MANY CREDITS INTO THE BANK?';
+    for (let a = 1; a <= 3; a++) items.push({ id: 'm' + a, label: String(a), sub: a === 1 ? 'CREDIT' : 'CREDITS', hue: 'rose', disabled: a > credits || sending, click: () => doAction({ a: 'manipulate', amount: a }) });
+    items.push({ id: 'mcancel', label: 'CANCEL', hue: 'grey', sound: false, click: () => { act = { mode: 'bar', kind: null, sel: [] }; } });
+  } else if (credits <= 0) {
+    prompt = 'YOU HAVE NO CREDITS LEFT';
+    items.push({ id: 'pass', label: 'PASS', hue: 'grey', disabled: sending, click: () => doAction({ a: 'pass' }) });
+  } else {
+    prompt = 'CHOOSE AN ACTION';
+    const pick = k => () => { act = { mode: 'pick', kind: k, sel: [] }; };
+    items.push({ id: 'open', label: 'OPEN', sub: '1 CREDIT', hue: 'teal', disabled: credits < 1, click: pick('open') });
+    items.push({ id: 'private', label: 'PRIVATE', sub: '2 CREDITS', hue: 'lav', disabled: credits < 2, click: pick('private') });
+    items.push({ id: 'rot1', label: 'ROTATE 1', sub: '3 CREDITS', hue: 'amber', disabled: credits < 3 || sending, click: () => doAction({ a: 'rotate', n: 1 }) });
+    items.push({ id: 'rot2', label: 'ROTATE 2', sub: '4 CREDITS', hue: 'amber', disabled: credits < 4 || sending, click: () => doAction({ a: 'rotate', n: 2 }) });
+    items.push({ id: 'manip', label: 'MANIPULATE', sub: '1-3 CREDITS', hue: 'rose', disabled: credits < 1, click: () => { act = { mode: 'manip', kind: null, sel: [] }; } });
+  }
+  const n = items.length;
+  const availW = Ly.compact ? W - 16 : Math.min(W - 16, W - 2 * Math.min(300, W * 0.22) - 24);
+  const minW = Math.max(84, U * 0.16);
+  let cols = Math.max(1, Math.min(n, Math.floor((availW + gap) / (minW + gap))));
+  const rows = Math.ceil(n / cols); cols = Math.ceil(n / rows);
+  const bw = Math.min(180, (availW - gap * (cols - 1)) / cols);
+  const totalH = rows * bh + (rows - 1) * gap;
+  const y0 = Ly.barBottom - totalH;
+  const pl = wrapLines(prompt, W - 16, fs * 0.95, 400);
+  pl.forEach((l, k) => txt(l, W / 2, y0 - 6 - (pl.length - 1 - k) * fs * 1.1 - fs * 0.5, fs * 0.95, COL.accent, 'center', 400));
+  for (let r = 0; r < rows; r++) {
+    const inRow = Math.min(cols, n - r * cols), rowW = inRow * bw + (inRow - 1) * gap;
+    for (let k = 0; k < inRow; k++) {
+      const it = items[r * cols + k];
+      btn(it.id, (W - rowW) / 2 + k * (bw + gap), y0 + r * (bh + gap), bw, bh, it.label, it);
+    }
+  }
+}
+
+function drawOverBar() {
+  const { bh, gap } = Ly, items = [];
+  if (!(fire && !fire.done)) {
+    if (G.you.isHost) items.push({ id: 'again', label: 'PLAY AGAIN', hue: 'teal', click: () => sendMsg({ t: 'restart' }) });
+    items.push({ id: 'leave2', label: 'LEAVE', hue: 'grey', sound: false, click: leaveRoom });
+  }
+  const bw = Math.min(170, (W - 16 - gap * 2) / 3), rowW = items.length * bw + (items.length - 1) * gap;
+  items.forEach((it, k) => btn(it.id, (W - rowW) / 2 + k * (bw + gap), Ly.barBottom - bh, bw, bh, it.label, it));
+  if (!(fire && !fire.done) && G.result) {
+    const r = G.result, bl = [0, 1, 2, 3, 4, 5].filter(i => r.bullets[i]).map(i => LET[i]).join(' AND ');
+    const msg = 'BULLETS IN ' + bl + '. HIT: ' + r.losers.map(nm).join(' AND ') + (G.you.isHost ? '' : '. WAITING FOR THE HOST.');
+    fitTxt(msg, W / 2, Ly.barBottom - bh - Ly.fs * 0.9, W - 16, Ly.fs * 0.95, COL.accent, 'center', 400, 8);
+  }
+}
+
+function drawTable(t) {
+  drawHeader(t);
+  const kind = pickKind();
+  for (let i = 0; i < 6; i++) drawPlaque(i, t);
+  // revolver
+  const sel = kind ? selectableSet(kind) : null;
+  let reveal = null;
+  if (G.phase === 'over' && G.result) {
+    if (fire && !fire.done) reveal = G.result.bullets.map((b, i) => fire.fired[i] ? b : null);
+    else reveal = G.result.bullets;
+  }
+  let selected = kind ? act.sel : [];
+  if (fire && !fire.done && fire.curChamber != null) selected = [fire.curChamber];
+  const hv = sel && !ui.blocked ? chamberAt(Ly.cx, Ly.cy, Ly.R, aimD, ui.mx, ui.my) : -1;
+  hoverCh = hv; if (hv >= 0 && sel.has(hv)) ui.cursor = 'pointer';
+  drawRevolver(c, Ly.cx, Ly.cy, Ly.R, aimD, { notes: G.notes || null, selectable: sel, selected, hover: hv, reveal, flash: fx.flash, t });
+  if (G.phase === 'playing' && myTurn()) drawActionBar(t);
+  else if (G.phase === 'over') drawOverBar();
+  else if (G.phase === 'playing') {
+    // waiting
+    c.globalAlpha = 0.6 + 0.4 * Math.sin(t / 500);
+    txt('WAITING FOR ' + nm(G.turnSeat), W / 2, Ly.barBottom - Ly.bh * 0.5, Ly.fs, '#778', 'center'); c.globalAlpha = 1;
+  }
+}
+
+// ═════════════════════════════ MODALS ═════════════════════════════
+function modalPanel(w, h) {
+  c.fillStyle = 'rgba(14,8,10,0.75)'; c.fillRect(0, 0, W, H);
+  const x = (W - w) / 2, y = (H - h) / 2; panel(x, y, w, h); return { x, y, w, h };
+}
+const HOW = [
+  ['THE GOAL', 'Six players sit around a revolver with six chambers, A to F. Two chambers hold hidden bullets. When a third player runs out of credits, the gun fires once at each seat in turn. The two players who are hit lose. The other four win.'],
+  ['ON YOUR TURN', 'Spend credits on one action. Turns go clockwise, six turns to a round.'],
+  ['OPEN INVESTIGATION (1)', 'Pick any two chambers. Everyone sees what is in them.'],
+  ['PRIVATE INVESTIGATION (2)', 'Pick two chambers that are next to each other. Only you see the result.'],
+  ['ROTATE (3 OR 4)', 'Turn the gun to aim 1 or 2 seats clockwise. Chamber A fires at the seat the gun aims at, so rotating moves every bullet to a different seat.'],
+  ['MANIPULATE (1, 2 OR 3)', 'Pay credits into a hidden bank. If the bank reaches 6, you are told, and you swap the contents of two neighbouring chambers. Otherwise you are only told there were not enough credits. Nobody else learns which.'],
+  ['PASS', 'With no credits left you can only pass.'],
+  ['WHAT OTHERS SEE', 'Private investigations, manipulations and passes all look the same to everyone else: "did a private action". You only ever see your own credits.'],
+  ['CHAT', 'You can talk privately to the players on your left and right, and only them.'],
+  ['THE SHOT', 'Firing starts at the seat the gun aims at and goes clockwise. Chamber A fires at the aimed seat, B at the next, and so on.'],
+  ['YOUR NOTES', 'Chambers you have seen are marked: red for a bullet, teal ring for empty. If someone swaps chambers after you looked, your mark can be out of date.']
+];
+function drawHow() {
+  const w = Math.min(W * 0.94, 620), h = H * 0.86, m = modalPanel(w, h);
+  c.font = TITLE(Math.min(H * 0.09, 56)); c.fillStyle = COL.scarlet; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('How to Play', W / 2, m.y + Math.min(H * 0.065, 40));
+  const bh = clamp(H * 0.065, 34, 46), headH = Math.min(H * 0.065, 40) * 2;
+  const bodyTop = m.y + headH, bodyBot = m.y + h - bh - 24, bodyH = bodyBot - bodyTop, pad = 18;
+  const fs = clamp(U * 0.036, 12, 17), lh = fs * 1.4;
+  // measure
+  let total = 0; const blocks = [];
+  for (const [hd, body] of HOW) { const ls = wrapLines(body, w - pad * 2, fs, 400); blocks.push({ hd, ls }); total += lh * 1.2 + ls.length * lh + fs * 0.5; }
+  const maxScroll = Math.max(0, total - bodyH); howScroll = clamp(howScroll, 0, maxScroll);
+  c.save(); c.beginPath(); c.rect(m.x + 2, bodyTop, w - 4, bodyH); c.clip();
+  let y = bodyTop - howScroll + lh * 0.5;
+  for (const b of blocks) {
+    txt(b.hd, m.x + pad, y, fs, COL.amber, 'left', 500); y += lh * 1.2;
+    for (const l of b.ls) { txt(l, m.x + pad, y, fs, '#E4E4E4', 'left'); y += lh; }
+    y += fs * 0.5;
+  }
+  c.restore();
+  if (maxScroll > 0) {
+    const th = Math.max(24, bodyH * bodyH / total), ty = bodyTop + (bodyH - th) * (howScroll / maxScroll);
+    roundRect(c, m.x + w - 8, ty, 4, th, 2); c.fillStyle = 'rgba(201,162,74,0.6)'; c.fill();
+  }
+  ui.howBody = { x: m.x, y: bodyTop, w, h: bodyH, max: maxScroll };
+  const bw = Math.min(200, w * 0.5);
+  btn('howclose', W / 2 - bw / 2, m.y + h - bh - 12, bw, bh, 'CLOSE', { hue: 'grey', modal: true, sound: false, click: () => { showHow = false; } });
+}
+function drawPriv() {
+  const pm = privQueue[0], fs = clamp(U * 0.045, 13, 24);
+  const w = Math.min(W * 0.9, 440), lh = fs * 1.7;
+  const h = fs * 2.2 + Math.min(H * 0.1, 64) + pm.rows.length * lh + fs * 4.5;
+  const m = modalPanel(w, h), hs = Math.min(H * 0.09, 56);
+  c.font = TITLE(hs); c.fillStyle = COL.scarlet; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(pm.title, W / 2, m.y + hs * 0.8);
+  txt('ONLY YOU CAN SEE THIS', W / 2, m.y + hs * 1.55, fs * 0.7, '#778', 'center');
+  let y = m.y + hs * 1.55 + fs * 1.8;
+  for (const r of pm.rows) { fitTxt(r.t, W / 2, y, w - 24, r.big ? fs * 1.3 : fs, r.col || '#E4E4E4', 'center', r.big ? 500 : 400, 9); y += lh; }
+  const bh = clamp(H * 0.065, 34, 46), bw = Math.min(180, w * 0.5);
+  btn('privok', W / 2 - bw / 2, m.y + h - bh - 14, bw, bh, 'OK', { hue: 'teal', modal: true, click: () => { privQueue.shift(); } });
+}
+// ═════════════════════════════ UPDATE / LOOP ═════════════════════════════
+function modalActive() { return showHow || privQueue.length > 0; }
+function update(dt, t) {
+  updateSpecks(dt);
+  aimD += (aimT - aimD) * (1 - Math.exp(-dt * 9));
+  fx.flash = Math.max(0, fx.flash - dt / 0.35); fx.shake = Math.max(0, fx.shake - dt / 0.5);
+  if (fire && !fire.done && G && G.result && privQueue.length === 0 && !showHow) {
+    fire.t += dt * 1000;
+    const T0 = 900, STEP = 1000, f = G.result.firing;
+    const k = Math.min(5, Math.floor((fire.t - T0) / STEP));
+    for (let j = 0; j <= k; j++) {
+      if (!fire.aimed[j]) {
+        fire.aimed[j] = true; fire.curChamber = f[j].chamber;
+        const d = (f[j].seat - fire.cur + 6) % 6; aimT += d * Math.PI / 3; fire.cur = f[j].seat;
+      }
+      if (!fire.shot[j] && fire.t - T0 - j * STEP >= 500) {
+        fire.shot[j] = true; fire.fired[f[j].chamber] = true;
+        if (f[j].bullet) { fire.hit.add(f[j].seat); fx.flash = 1; fx.shake = 1; synth('bang'); } else synth('click');
+      }
+    }
+    if (fire.t > T0 + 6 * STEP + 300) { fire.done = true; fire.curChamber = null; sfx('arcade4', 0.5); }
+  }
+}
+function overLogShown() { return screen === 'table' && G && G.phase === 'over' && G.result && (!fire || fire.done); }
+function overLogW() { return clamp(W * 0.26, 200, 360); }
+function syncHtml() {
+  const t = now();
+  const blocked = ui.blocked, inMenu = screen === 'menu' && !blocked;
+  show(inName, inMenu); show(inCode, inMenu);
+  if (screen !== 'menu') { inName.blur(); inCode.blur(); }
+  const inGame = screen === 'table' && G && G.phase !== 'lobby' && !blocked;
+  show(chats.left.el, inGame, 'flex'); show(chats.right.el, inGame, 'flex');
+  const lw = document.getElementById('logWin');
+  const overLog = overLogShown();
+  const logOn = screen === 'table' && G && G.options && (G.options.log || overLog) && !blocked && !(G.phase === 'over' && !overLog);
+  show(lw, logOn, 'flex');
+  if (inGame) {
+    const w = Ly.compact ? Math.floor((W - 18) / 2) : clamp(W * 0.2, 200, 280);
+    const hh = clamp(H * 0.3, 160, 260);
+    for (const s of ['left', 'right']) {
+      const e = chats[s].el, open = e.classList.contains('open');
+      e.style.width = w + 'px'; e.style.height = open ? hh + 'px' : '30px'; e.style.fontSize = '14px';
+    }
+  }
+  if (logOn) {
+    const w = overLog ? overLogW() : clamp(W * 0.18, 150, 220);
+    const title = overLog ? 'FULL LOG' : 'LOG'; const lt = document.getElementById('logTitle'); if (lt.textContent !== title) lt.textContent = title;
+    const top = Math.round(Ly.fs * 3.4 + (Ly.twoRow ? Ly.fs * 2.6 : 0) + 4 + (Ly.twoRow ? Ly.bannerH : 0));
+    lw.style.top = top + 'px'; lw.style.width = (overLog ? Math.min(w, W - 16) : Ly.compact ? Math.min(w + 40, W * 0.5) : w) + 'px';
+    lw.style.height = lw.classList.contains('collapsed') ? '24px' : (overLog ? clamp(H * 0.62, 140, Math.max(140, H - top - 150)) : clamp(H * 0.3, 110, 260)) + 'px';
+    renderLog();
+  }
+}
+
+let lastLogKey = '';
+function renderLog() {
+  const evs = G.phase === 'over' && G.result ? G.result.fullLog : (G.events || []);
+  const key = G.phase + ':' + evs.length + ':' + (evs.length ? evs[evs.length - 1].seq : 0) + ':' + (G.players ? G.players.map(p => p.name).join() : '');
+  if (key === lastLogKey) return; lastLogKey = key;
+  const body = document.getElementById('logBody'); body.innerHTML = '';
+  for (const e of evs) {
+    const d = document.createElement('div'); const sp = document.createElement('span'); sp.textContent = 'R' + e.round + ' ';
+    const over = G.phase === 'over';
+    if (over && e.kind === 'private') d.className = 'rv';
+    const cost = over ? evCost(e) : null;
+    if (cost != null) { const ci = document.createElement('i'); ci.textContent = cost ? '-' + cost : '0'; d.appendChild(ci); }
+    d.appendChild(sp); d.appendChild(document.createTextNode(fmtEvent(e, over))); body.appendChild(d);
+  }
+  body.scrollTop = body.scrollHeight;
+}
+
+function frame(ts) {
+  const t = ts || now();
+  const dt = Math.min(0.1, (t - (frame.last || t)) / 1000); frame.last = t;
+  computeLayout();
+  ui.buttons = []; ui.cursor = 'default';
+  ui.blocked = modalActive();
+  update(dt, t);
+  drawBackground();
+  if (screen === 'menu' || (screen === 'connecting' && !G)) {
+    c.fillStyle = 'rgba(14,8,10,0.55)'; c.fillRect(0, 0, W, H);
+  }
+  if (screen === 'menu') drawMenu();
+  else if (screen === 'connecting') drawConnecting();
+  else if (screen === 'lobby' && G) drawLobby();
+  else if (screen === 'table' && G) drawTable(t);
+  drawBannerSlot(t);
+  if (conn.reconnecting && screen !== 'menu') {
+    const fs = Ly.fs; c.fillStyle = 'rgba(120,10,30,0.88)'; c.fillRect(0, 0, W, fs * 1.9);
+    c.globalAlpha = 0.6 + 0.4 * Math.sin(t / 300); txt('CONNECTION LOST. RECONNECTING...', W / 2, fs * 0.95, fs, '#F2F2F2', 'center', 500); c.globalAlpha = 1;
+  }
+  if (showHow) drawHow();
+  else if (privQueue.length) drawPriv();
+  syncHtml();
+  cv.style.cursor = ui.cursor;
+  requestAnimationFrame(frame);
+}
+
+// ═════════════════════════════ INPUT ═════════════════════════════
+function resize() {
+  W = window.innerWidth; H = window.innerHeight; DPR = window.devicePixelRatio || 1;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  c.setTransform(DPR, 0, 0, DPR, 0, 0); initSpecks();
+}
+window.addEventListener('resize', resize);
+cv.addEventListener('pointermove', e => {
+  ui.mx = e.clientX; ui.my = e.clientY;
+  if (showHow && ui.down && ui.howBody) { howScroll -= (e.clientY - ui.down.y); ui.down.y = e.clientY; ui.down.moved = true; }
+});
+cv.addEventListener('pointerleave', () => { ui.mx = ui.my = -1; });
+cv.addEventListener('pointerup', () => { ui.down = null; });
+cv.addEventListener('wheel', e => { if (showHow) { howScroll += e.deltaY; e.preventDefault(); } }, { passive: false });
+cv.addEventListener('pointerdown', e => {
+  ensureAudio();
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+  ui.mx = e.clientX; ui.my = e.clientY; ui.down = { x: e.clientX, y: e.clientY, moved: false };
+  for (let i = ui.buttons.length - 1; i >= 0; i--) {
+    const b = ui.buttons[i];
+    if (inRect(ui.mx, ui.my, b.x, b.y, b.w, b.h)) {
+      if (b.disabled) return;
+      if (b.sound) sfx('keyclick', 0.125);
+      if (b.click) b.click(); return;
+    }
+  }
+  if (!ui.blocked && screen === 'table' && G && pickKind()) {
+    const i = chamberAt(Ly.cx, Ly.cy, Ly.R, aimD, ui.mx, ui.my);
+    if (i >= 0) clickChamber(i);
+  }
+});
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { if (showHow) showHow = false; else if (privQueue.length) privQueue.shift(); }
+  if (e.key === 'Enter' && privQueue.length && document.activeElement === document.body) privQueue.shift();
+});
+
+// ═════════════════════════════ CHAT (HTML) ═════════════════════════════
+const chats = {};
+for (const side of ['left', 'right']) {
+  const el = document.getElementById(side === 'left' ? 'chatL' : 'chatR');
+  const o = { el, title: el.querySelector('.ct'), list: el.querySelector('.cm'), input: el.querySelector('input'), unread: false };
+  chats[side] = o;
+  el.querySelector('.ch').addEventListener('click', () => {
+    const open = !el.classList.contains('open'); el.classList.toggle('open', open);
+    if (open) { el.classList.remove('unread'); o.unread = false; setTimeout(() => { o.list.scrollTop = o.list.scrollHeight; o.input.focus(); }, 0); }
+  });
+  o.input.addEventListener('keydown', ev => {
+    ev.stopPropagation();
+    if (ev.key === 'Enter') { const t = o.input.value.trim(); if (t) { sendMsg({ t: 'chat', side, text: t.slice(0, 300) }); o.input.value = ''; } }
+  });
+}
+function markUnread(side) { const o = chats[side]; if (!o.el.classList.contains('open')) { o.unread = true; o.el.classList.add('unread'); } }
+function renderChats(force) {
+  for (const side of ['left', 'right']) {
+    const o = chats[side], d = chatData[side];
+    if (!force && o.n === d.length) continue; o.n = d.length;
+    o.list.innerHTML = '';
+    for (const m of d) { const div = document.createElement('div'); div.className = m.mine ? 'me' : 'them'; div.textContent = m.text; o.list.appendChild(div); }
+    o.list.scrollTop = o.list.scrollHeight;
+    if (force && !d.length) { o.el.classList.remove('unread'); }
+  }
+}
+function refreshChatTitles() {
+  if (!G || !G.you || G.phase === 'lobby') return;
+  const me = G.you.index;
+  const set = (side, seat) => { const t = (side === 'left' ? 'LEFT: ' : 'RIGHT: ') + nm(seat); const s = chats[side].title; if (s.dataset.t !== t) { s.dataset.t = t; s.innerHTML = ''; const [a, b] = t.split(': '); s.append(a + ': '); const bb = document.createElement('b'); bb.textContent = b; s.appendChild(bb); } };
+  set('left', (me + 1) % 6); set('right', (me + 5) % 6);
+}
+function setLogCollapsed(v) {
+  const lw = document.getElementById('logWin'); lw.classList.toggle('collapsed', v); document.getElementById('logTog').textContent = v ? '+' : '-';
+}
+document.getElementById('logWin').querySelector('.lh').addEventListener('click', () => {
+  setLogCollapsed(!document.getElementById('logWin').classList.contains('collapsed'));
+});
+
+// ═════════════════════════════ BOOT ═════════════════════════════
+resize();
+if (window.innerWidth < 900 || window.innerHeight > window.innerWidth * 0.85) setLogCollapsed(true);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
