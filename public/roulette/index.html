@@ -191,7 +191,7 @@
   .seat.chatw { box-shadow: 0 0 0 2px rgba(251,241,220,.75), 0 .25em .8em rgba(0,0,0,.3); }
   .seat.turn { background: var(--sun); color: var(--plum); border-color: var(--sun); z-index: 3; animation: turnp 1.1s ease-in-out infinite;
     box-shadow: 0 0 0 3px rgba(242,168,103,.45), 0 0 28px 6px rgba(242,168,103,.75); }
-  @keyframes turnp { 0%, 100% { transform: translate(-50%, -50%) scale(.94); } 50% { transform: translate(-50%, -50%) scale(1.08); } }
+  @keyframes turnp { 0%, 100% { transform: translate(-50%, -50%) scale(.9825); } 50% { transform: translate(-50%, -50%) scale(1.0175); } }
   .seat.shake { animation: shk .5s linear; }
   @keyframes shk { 0%, 100% { transform: translate(-50%, -50%); } 15% { transform: translate(calc(-50% - 7px), -50%); } 30% { transform: translate(calc(-50% + 7px), -50%); } 45% { transform: translate(calc(-50% - 5px), -50%); } 60% { transform: translate(calc(-50% + 5px), -50%); } 80% { transform: translate(calc(-50% - 2px), -50%); } }
   .seat .first { display: none; position: absolute; left: -.7em; top: -.85em; height: 1.4em; padding: 0 .55em; border-radius: 999px; background: var(--terra); color: #fff; font-size: .72em; font-weight: 600; letter-spacing: .12em; align-items: center; z-index: 4; }
@@ -339,7 +339,7 @@
     </div>
   </section>
   <div class="modal" id="mHow"><div class="mp"><h2>How to Play</h2><div class="mb" id="howBody"></div><button class="btn pri" data-a="howclose" data-ns>CLOSE</button></div></div>
-  <div class="modal" id="mPriv"><div class="mp" style="width:min(100%,440px)"><h2 id="pvTitle" style="margin-bottom:.45em"></h2><div id="pvRows"></div><button class="btn pri" data-a="privok" style="margin-top:1em">OK</button></div></div>
+  <div class="modal" id="mPriv"><div class="mp" style="width:min(100%,440px)"><h2 id="pvTitle" style="margin-bottom:.45em"></h2><div id="pvRows"></div><button class="btn pri" data-a="privok" data-ns style="margin-top:1em">OK</button></div></div>
   <div id="recon">CONNECTION LOST. RECONNECTING...</div>
   <div id="toast"></div>
 </div>
@@ -1140,16 +1140,16 @@ function layoutLog() {   // narrow screens: the log opens over the table area
 
 // ═════════════════════════════ MODALS ═════════════════════════════
 const HOW = [
-  ['THE GOAL', 'Six players sit around a revolver with six chambers, A to F. Two chambers hold hidden bullets. When a third player runs out of credits, the gun fires once at each seat in turn. The two players who are hit lose. The other four win.'],
-  ['ON YOUR TURN', 'Spend credits on one action. Turns go clockwise, six turns to a round.'],
+  ['THE GOAL', 'Six players sit around a revolver with six chambers, A to F. Two chambers hold hidden bullets. The endgame is triggered once three players run out of credits. The two players who are hit lose; the other four win.'],
+  ['ON YOUR TURN', 'Spend credits on one action. Players take turns in clockwise order, starting with the first player. Once a new round begins, the first player marker moves clockwise.'],
   ['OPEN INVESTIGATION (1)', 'Pick any two chambers. Everyone sees what is in them.'],
-  ['PRIVATE INVESTIGATION (2)', 'Pick two chambers that are next to each other. Only you see the result.'],
-  ['ROTATE (3 OR 4)', 'Turn the gun to aim 1 or 2 seats clockwise. Chamber A fires at the seat the gun aims at, so rotating moves every bullet to a different seat.'],
-  ['MANIPULATE (1, 2 OR 3)', 'Pay credits into a hidden bank. If the bank reaches 6, you are told, and you swap the contents of two neighbouring chambers. Otherwise you are only told there were not enough credits. Nobody else learns which.'],
+  ['PRIVATE INVESTIGATION (2)', 'Pick two chambers that are next to each other. Only you see what the chambers contain.'],
+  ['ROTATE (3 OR 4)', 'Turn the gun to aim 1 or 2 seats clockwise. At the end of the game, Chamber A will fire at the seat the gun aims at, so rotating moves every bullet to a different seat.'],
+  ['MANIPULATE (1, 2 OR 3)', 'Pay credits into a hidden bank. If the bank reaches at least 6 credits, you get to swap the contents of two neighbouring chambers. Otherwise you are only told there were not enough credits. Nobody else learns which.'],
   ['PASS', 'With no credits left you can only pass.'],
-  ['WHAT OTHERS SEE', 'Private investigations, manipulations and passes all look the same to everyone else: "did a private action". You only ever see your own credits.'],
-  ['CHAT', 'You can talk privately to the players on your left and right, and only them. There is no chat with CPU players.'],
-  ['THE SHOT', 'Firing starts at the seat the gun aims at and goes clockwise. Chamber A fires at the aimed seat, B at the next, and so on.'],
+  ['WHAT OTHERS SEE', 'Private investigations, manipulations, and passes all look the same to everyone else: "did a private action". Your credit balance is also private.'],
+  ['CHAT', 'You can talk privately to any human neighbors.'],
+  ['THE SHOT', 'Once the ending is triggered, Chamber A will fire at the aimed seat, B at the next clockwise seat, and so on.'],
   ['YOUR NOTES', 'Chambers you have seen are marked: red for a bullet, mint ring for empty. If someone swaps chambers after you looked, your mark can be out of date. At most two chambers are ever marked red: when newer information shows two bullets, older red marks are cleared.'],
   ['YOUR SEAT', 'Click your own name to move your seat to the bottom of the table, and click it again to put it back.']
 ];
